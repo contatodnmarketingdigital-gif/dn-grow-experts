@@ -195,6 +195,8 @@ button{cursor:pointer}
 .fase{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
 .fase summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;list-style:none}
 .fase summary::-webkit-details-marker{display:none}
+.fase.now{border-color:var(--accent)}
+.pill.novo{background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:10px;vertical-align:1px}
 .fase .fn{font-size:11px;color:var(--accent)}
 .fase .ft{font-family:var(--f-display);font-weight:700;font-size:16px}
 .fase .fw{font-size:12px;color:var(--muted);flex:1 1 auto}
@@ -498,7 +500,8 @@ document.addEventListener("click", async ev=>{
 document.addEventListener("change", ev=>{
   const el = ev.target; const e = experts.find(x=>x.id===openId);
   if(el.id==="mSel"){ mSel=el.value; try{localStorage.setItem("dngrow-m",mSel);}catch{} renderMontagem(); return; }
-  if(el.id==="mInicio"){ const ex=experts.find(x=>x.id===mSel); if(ex && (ex.inicioTeste||"")!==el.value) save(ex.id,{inicioTeste:el.value},`Início do teste: ${fmtDate(el.value)}`); return; }
+  if(el.id==="mInicio"){ const ex=experts.find(x=>x.id===mSel); if(!ex) return; const f=planOf(ex).base==="carrinho"?"dataCarrinho":"inicioTeste"; if((ex[f]||"")!==el.value) save(ex.id,{[f]:el.value},`${planOf(ex).rotuloData}: ${fmtDate(el.value)}`); return; }
+  if(el.id==="mModelo"){ const ex=experts.find(x=>x.id===mSel); if(ex && el.value!==(ex.planoModelo||"perpetuo")) save(ex.id,{planoModelo:el.value},`Plano: ${PLANOS[el.value].nome}`); return; }
   if(el.dataset.qstat){ const id=el.dataset.qstat; if(db) enqueue("q"+id,()=>db.collection("pedidos").doc(id).update({status:el.value, atualizadoEm:new Date().toISOString()})).catch(()=>toast("Não salvou.")); return; }
   if(!e) return;
   if(el.dataset.chk){ const [sk,ik]=el.dataset.chk.split("."); const label=STAGES[SK[sk]].items.find(i=>i[0]===ik)[1];
@@ -550,90 +553,131 @@ function renderMethod(){
 /* ---------- montagem do negócio ---------- */
 const AG = {diretor:["Diretor",""], midia:["Mídia e Dados","trafego-meta-ads-low-ticket"], joana:["Joana","joana-copy-infoproduto"], criativos:["Criativos","criativos-imagem"], video:["Vídeo","edicao-video-criativo"], rel:["Relacionamento","social-seller-instagram"]};
 const QUEM = {nos:"Nós", expert:"Expert", ambos:"Nós + expert"};
-// [chave, nome, semana início, semana fim, objetivo, trava, itens: [chave, tarefa, quem]]
-const PLANO = [
+// Fase: [chave, nome, de, até, objetivo, trava, itens]. "de/até" são semanas (perpétuo) ou dias a partir da abertura do carrinho (meteórico).
+// Item: [chave, tarefa, quem, acrescentado?]. Acrescentado = não estava no cronograma original.
+const PLANOS = {
+ meteorico: {nome:"Lançamento meteórico em grupos", base:"carrinho", rotuloData:"Abertura do carrinho", fases:[
+  ["prep","Preparação",-45,-39,"Tudo assinado e acessível antes de construir.","",[
+    ["contrato","Contrato de coprodução assinado (vigência e regras de saída)","ambos"],
+    ["recebe","Quem recebe confirmado: CNPJ e conta que aparece na Greenn","ambos",1],
+    ["acessos","Acessos: BM, conta de anúncio, Greenn, Instagram e ManyChat","expert"],
+    ["ssd","Página do SSD atualizada (informações, garantia, bônus)","joana"],
+    ["bio","Bio e links ajustados","nos"],
+    ["vendas","Vendas de 90 dias exportadas e linha de base registrada","nos",1],
+    ["renova","Renovação automática ligada na Greenn","expert",1],
+    ["verba","Verba da Black: valor e origem (caixa 60/40)","ambos",1]]],
+  ["estrut","Estruturação",-38,-25,"Oferta, números e a máquina de captação prontos antes do primeiro real em tráfego.","",[
+    ["oferta","Oferta da Black: anual do SSD + bônus (HIIT Tabata, Fire 21, planos, fichas)","joana"],
+    ["preco","Preço, parcelamento e garantia definidos","ambos"],
+    ["numeros","Meta de vendas, custo por lead máximo e ponto de equilíbrio calculados","midia",1],
+    ["greenn","Oferta da Black criada na Greenn com checkout personalizado","nos",1],
+    ["split","Split ou coprodução 60/40 configurado na Greenn","ambos",1],
+    ["bump","Order bump e upsell para a consultoria configurados","nos",1],
+    ["compra","Compra teste feita e reembolsada","nos",1],
+    ["pagina","Página da Black (copy e montagem)","joana"],
+    ["captura","Página de captura para os grupos, com evento de Lead","nos",1],
+    ["pixel","Pixel, API de conversão e UTMs conferidos ponta a ponta","midia"],
+    ["zap","WhatsApp: números, ferramenta de grupos e regras contra bloqueio","nos",1],
+    ["roteiro","Roteiro dos grupos, mensagem por mensagem até o carrinho","rel"],
+    ["criativos","Criativos de captação (vídeos da Jéssica e estáticos)","video"],
+    ["painel","Painel de indicadores da campanha","nos"]]],
+  ["aquec","Aquecimento",-24,-11,"Conteúdo e testes baratos antes do leilão caro da semana da Black.","Tráfego só sobe com a página de captura e o pixel conferidos.",[
+    ["conteudo","Pauta de conteúdo orgânico direcionado para a Black","ambos"],
+    ["testes","Testes de tráfego: criativos e públicos para lead","midia"],
+    ["antecipa","Captação paga antecipada a partir de 10/11, com o CPM mais barato","midia",1],
+    ["cpl","Leitura do custo por lead e corte dos criativos ruins","midia",1],
+    ["base","Campanha para as alunas: renovação antecipada e upgrade para o anual","rel",1],
+    ["depo","Depoimentos das alunas coletados (vídeo e print)","expert",1],
+    ["desafio","Desafio de entrada definido (gratuito ou R$ 97) e roteiro","diretor",1]]],
+  ["capt","Captação",-10,-4,"Encher os grupos: orgânico, desafio e tráfego pago juntos.","",[
+    ["organico","Chamadas no orgânico para entrar no grupo (stories, Reels, lives)","expert"],
+    ["desafio","Desafio rodando como porta de entrada","expert"],
+    ["trafego","Tráfego de captação escalado nos criativos vencedores","midia"],
+    ["grupos","Grupos abertos e moderados","rel"],
+    ["meta","Acompanhamento diário: entradas no grupo x meta","midia",1]]],
+  ["pre","Pré-venda",-3,-1,"Grupo aquecido, oferta revelada e equipe pronta para o carrinho.","",[
+    ["conteudo","Conteúdo no grupo","rel"],
+    ["depo","Depoimentos das alunas no grupo","rel"],
+    ["revela","Revelação da oferta","ambos"],
+    ["remkt","Remarketing para quem entrou no grupo e para quem visitou a página","midia",1],
+    ["equipe","Equipe de atendimento escalada para o carrinho","nos",1]]],
+  ["carrinho","Carrinho aberto",0,3,"Da Black Friday à Cyber Monday, com recuperação ativa.","",[
+    ["abre","Carrinho aberto: grupo, stories e e-mail","ambos"],
+    ["recupera","Recuperação ativa de Pix, boleto e checkout abandonado","rel"],
+    ["leitura","Leitura várias vezes ao dia: vendas, conversão do grupo e ROAS","midia",1],
+    ["fecha","Contagem regressiva e encerramento na Cyber Monday","rel"],
+    ["upsell","Consultoria oferecida para quem comprou","rel"]]],
+  ["pos","Pós-campanha",4,34,"Transformar a compra da Black em aluna que fica.","",[
+    ["onboarding","Onboarding das novas alunas","expert"],
+    ["migra","Migração para a recorrência","rel"],
+    ["relatorio","Relatório de resultados da Black","diretor"],
+    ["fechamento","Fechamento do mês: faturamento, custos, reserva de 10% a 15% e divisão 60/40","nos",1],
+    ["licoes","O que repetir e o que cortar em janeiro","diretor",1]]],
+  ["ano","Ano Novo e decisão",35,65,"O piloto vai até janeiro: a segunda campanha e a decisão da sociedade.","",[
+    ["campanha","Campanha de Ano Novo planejada com o que a Black ensinou","diretor",1],
+    ["perpetuo","Funil perpétuo do desafio de R$ 97 até a consultoria","diretor",1],
+    ["avaliacao","Avaliação conjunta dos 90 dias e decisão sobre a sociedade","ambos",1]]]
+ ]},
+ perpetuo: {nome:"Perpétuo com tráfego", base:"semanas", rotuloData:"Início do teste", fases:[
   ["acessos","Acessos e rastreio",1,1,"Sem acesso e sem pixel, nenhum agente trabalha e nenhum número é confiável.","",[
-    ["bm","Acesso de administrador à BM e à conta de anúncio","expert"],
-    ["pixel","Pixel e API de conversão instalados e testados","midia"],
-    ["greenn","Acesso de colaborador na Greenn (vendas, produtos, relatórios)","expert"],
-    ["insta","Acesso ao Instagram, ManyChat e Meta Business Suite","expert"],
-    ["whats","Número de WhatsApp comercial definido","expert"],
-    ["pasta","Pasta com logo, fotos, depoimentos e vídeos da expert","expert"]]],
+    ["bm","Acesso de administrador à BM e à conta de anúncio","expert"],["pixel","Pixel e API de conversão instalados e testados","midia"],
+    ["greenn","Acesso de colaborador na Greenn (vendas, produtos, relatórios)","expert"],["insta","Acesso ao Instagram, ManyChat e Meta Business Suite","expert"],
+    ["whats","Número de WhatsApp comercial definido","expert"],["pasta","Pasta com logo, fotos, depoimentos e vídeos da expert","expert"]]],
   ["vendas","Raio-X das vendas",1,1,"Partir do que já vende. A linha de base do teste sai daqui.","",[
-    ["export","Vendas dos últimos 90 dias por produto exportadas da Greenn","nos"],
-    ["metricas","Ticket médio, renovação, cancelamento e LTV calculados","diretor"],
-    ["linhabase","Linha de base de faturamento mensal registrada e aceita pelos dois","ambos"],
-    ["rapidos","Ganhos rápidos ligados: renovação automática e recuperação de Pix e boleto","expert"],
+    ["export","Vendas dos últimos 90 dias por produto exportadas da Greenn","nos"],["metricas","Ticket médio, renovação, cancelamento e LTV calculados","diretor"],
+    ["linhabase","Linha de base de faturamento mensal aceita pelos dois","ambos"],["rapidos","Ganhos rápidos: renovação automática e recuperação de Pix e boleto","expert"],
     ["lista","Lista de alunas e leads organizada para remarketing","nos"]]],
   ["produtos","Funil de produtos",1,1,"Decidir a escada de produtos antes de escrever uma linha de copy.","",[
-    ["mapa","Mapa dos produtos atuais com preço, entrega e margem","diretor"],
-    ["entrada","Produto de entrada definido (o que o anúncio vende)","diretor"],
-    ["principal","Produto principal e recorrência definidos","diretor"],
-    ["alto","Produto de ticket alto definido (consultoria ou acompanhamento)","diretor"],
-    ["bump","Order bump e upsell definidos","joana"],
-    ["carro","Carro-chefe do teste escolhido e registrado","ambos"]]],
+    ["mapa","Mapa dos produtos atuais com preço, entrega e margem","diretor"],["entrada","Produto de entrada definido (o que o anúncio vende)","diretor"],
+    ["principal","Produto principal e recorrência definidos","diretor"],["alto","Produto de ticket alto definido","diretor"],
+    ["bump","Order bump e upsell definidos","joana"],["carro","Carro-chefe do teste escolhido e registrado","ambos"]]],
   ["numeros","Estratégia e números",2,2,"A conta do CPA decide a verba, o ticket e se a oferta para de pé.","Não suba campanha antes de fechar esta fase.",[
-    ["ticket","Ticket final do carro-chefe definido","ambos"],
-    ["custos","Custos por venda: taxa da Greenn, imposto e divisão 60/40","midia"],
-    ["cpa","CPA máximo e CPA alvo calculados","midia"],
-    ["verba","Verba diária do teste e quem paga definidos","ambos"],
-    ["marcos","Marcos de 30, 60 e 90 dias em número (faturamento, vendas, CPA)","diretor"],
-    ["calendario","Calendário do teste com as datas comerciais (Black Friday, janeiro)","diretor"]]],
+    ["ticket","Ticket final do carro-chefe definido","ambos"],["custos","Custos por venda: taxa da plataforma, imposto e divisão da parceria","midia"],
+    ["cpa","CPA máximo e CPA alvo calculados","midia"],["verba","Verba diária do teste e quem paga definidos","ambos"],
+    ["marcos","Marcos de 30, 60 e 90 dias em número","diretor"],["calendario","Calendário do teste com as datas comerciais","diretor"]]],
   ["oferta","Oferta e mensagem",2,2,"Linguagem do público e oferta fortes antes da página.","",[
-    ["pesquisa","Pesquisa de mercado e de concorrentes","joana"],
-    ["avatar","Avatar e nível de consciência do público","joana"],
-    ["promessa","Promessa, mecanismo e nome da oferta","joana"],
-    ["bonus","Bônus, garantia e ancoragem de preço","joana"],
-    ["provas","Depoimentos e prints de resultado das alunas reunidos","expert"],
-    ["objecoes","Objeções e respostas","joana"]]],
-  ["greenn","Produto na Greenn",2,3,"Checkout pronto e testado, e o dinheiro cai no lugar certo.","",[
-    ["produto","Produto criado ou ajustado (nome, descrição, entrega)","nos"],
-    ["ofertas","Ofertas e preços cadastrados (à vista, parcelado, recorrente)","nos"],
-    ["checkout","Checkout personalizado (foto, cores, depoimentos, garantia)","nos"],
-    ["bumpg","Order bump e upsell de um clique configurados","nos"],
-    ["split","Split ou coprodução 60/40 configurado","ambos"],
-    ["entrega","Área de membros e e-mail de acesso funcionando","expert"],
-    ["pixelg","Pixel e evento de compra ligados no checkout","midia"],
-    ["teste","Compra teste feita e reembolsada","nos"]]],
+    ["pesquisa","Pesquisa de mercado e de concorrentes","joana"],["avatar","Avatar e nível de consciência do público","joana"],
+    ["promessa","Promessa, mecanismo e nome da oferta","joana"],["bonus","Bônus, garantia e ancoragem de preço","joana"],
+    ["provas","Depoimentos e prints de resultado reunidos","expert"],["objecoes","Objeções e respostas","joana"]]],
+  ["greenn","Produto na plataforma",2,3,"Checkout pronto e testado, e o dinheiro cai no lugar certo.","",[
+    ["produto","Produto criado ou ajustado (nome, descrição, entrega)","nos"],["ofertas","Ofertas e preços cadastrados","nos"],
+    ["checkout","Checkout personalizado","nos"],["bumpg","Order bump e upsell de um clique configurados","nos"],
+    ["split","Split ou coprodução configurado","ambos"],["entrega","Área de membros e e-mail de acesso funcionando","expert"],
+    ["pixelg","Pixel e evento de compra ligados no checkout","midia"],["teste","Compra teste feita e reembolsada","nos"]]],
   ["pagina","Página de vendas",3,3,"Página que converte no celular, medida do clique à compra.","",[
-    ["copy","Copy da página bloco a bloco","joana"],
-    ["wire","Estrutura da página no celular aprovada","joana"],
-    ["build","Página montada e publicada no domínio","nos"],
-    ["utm","UTMs e eventos (ViewContent, InitiateCheckout, Purchase) conferidos","midia"],
-    ["mobile","Velocidade e leitura no celular testadas","nos"],
-    ["aprov","Página aprovada pela expert","expert"]]],
+    ["copy","Copy da página bloco a bloco","joana"],["wire","Estrutura da página no celular aprovada","joana"],
+    ["build","Página montada e publicada no domínio","nos"],["utm","UTMs e eventos conferidos","midia"],
+    ["mobile","Velocidade e leitura no celular testadas","nos"],["aprov","Página aprovada pela expert","expert"]]],
   ["criativos","Criativos",2,3,"Criativo nativo nasce da pesquisa do que converte: 80% do que funciona, 20% de teste.","",[
-    ["ref","Pesquisa na Biblioteca de Anúncios do nicho","joana"],
-    ["roteiros","Roteiros com 5 ganchos para a expert gravar","joana"],
-    ["gravacao","Gravação feita pela expert","expert"],
-    ["edicao","Vídeos editados com gancho e legenda","video"],
-    ["estaticos","Criativos estáticos de apoio","criativos"],
-    ["textos","Textos dos anúncios","joana"]]],
+    ["ref","Pesquisa na Biblioteca de Anúncios do nicho","joana"],["roteiros","Roteiros com 5 ganchos para a expert gravar","joana"],
+    ["gravacao","Gravação feita pela expert","expert"],["edicao","Vídeos editados com gancho e legenda","video"],
+    ["estaticos","Criativos estáticos de apoio","criativos"],["textos","Textos dos anúncios","joana"]]],
   ["captacao","Captação e relacionamento",3,3,"Quem não compra no primeiro clique precisa de um caminho de volta.","",[
-    ["bio","Link da bio com captura (quiz ou página)","nos"],
-    ["manychat","ManyChat com palavras-chave e fluxo até o checkout","rel"],
-    ["script","Roteiro de atendimento no WhatsApp","rel"],
-    ["recupera","Recuperação de checkout abandonado e de Pix","rel"],
-    ["boasvindas","Boas-vindas e check-in das novas alunas","rel"]]],
-  ["trafego","Tráfego no ar",4,4,"Campanha só sobe com Números, Greenn e Página completos.","Depende das fases Estratégia e números, Produto na Greenn e Página de vendas.",[
-    ["estrutura","Estrutura de campanha e públicos","midia"],
-    ["subida","Campanha publicada com o sim da expert","midia"],
-    ["diaria","Leitura diária: pausar, manter ou escalar","midia"],
-    ["semanal","Relatório semanal com CPA e gargalo","midia"]]],
+    ["bio","Link da bio com captura","nos"],["manychat","ManyChat com palavras-chave e fluxo até o checkout","rel"],
+    ["script","Roteiro de atendimento no WhatsApp","rel"],["recupera","Recuperação de checkout abandonado e de Pix","rel"],
+    ["boasvindas","Boas-vindas das novas alunas","rel"]]],
+  ["trafego","Tráfego no ar",4,4,"Campanha só sobe com Números, Plataforma e Página completos.","Depende das fases Estratégia e números, Produto na plataforma e Página de vendas.",[
+    ["estrutura","Estrutura de campanha e públicos","midia"],["subida","Campanha publicada com o sim da expert","midia"],
+    ["diaria","Leitura diária: pausar, manter ou escalar","midia"],["semanal","Relatório semanal com CPA e gargalo","midia"]]],
   ["rotina","Rotina e marcos",1,13,"Os marcos decidem se o teste vira sociedade.","",[
-    ["reuniao","Reunião semanal com a expert marcada na agenda","nos"],
-    ["m30","Relatório e decisão do marco de 30 dias","diretor"],
-    ["m60","Relatório e decisão do marco de 60 dias","diretor"],
-    ["m90","Relatório final dos 90 dias","diretor"]]]
-];
-const PL_ALL = PLANO.flatMap(([fk,fn,,,,,its])=>its.map(([ik,t,q])=>({key:fk+"."+ik, fase:fn, t, q})));
+    ["reuniao","Reunião semanal com a expert na agenda","nos"],["m30","Relatório e decisão do marco de 30 dias","diretor"],
+    ["m60","Relatório e decisão do marco de 60 dias","diretor"],["m90","Relatório final dos 90 dias","diretor"]]]
+ ]}
+};
 const PST = {afazer:["A fazer",""], fazendo:["Fazendo","warn"], feito:["Feito","good"]};
 let mSel = null; try{ mSel = localStorage.getItem("dngrow-m"); }catch{}
 
+function planOf(e){ return PLANOS[e.planoModelo] || PLANOS.perpetuo; }
+function planDate(e){ return planOf(e).base==="carrinho" ? (e.dataCarrinho||"") : (e.inicioTeste||""); }
+function allItems(e){ return planOf(e).fases.flatMap(([fk,fn,,,,,its])=>its.map(([ik,t,q,novo])=>({key:fk+"."+ik, fase:fn, t, q, novo:!!novo}))); }
 function plStatus(e,key){ return e.plano?.[key] || "afazer"; }
-function plProgress(e, items){ const its = items || PL_ALL; return {done: its.filter(i=>plStatus(e,i.key||i)==="feito").length, total: its.length}; }
+function plProgress(e, items){ const its = items || allItems(e); return {done: its.filter(i=>plStatus(e,i.key)==="feito").length, total: its.length}; }
 function addDays(iso, n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
-function plNext(e){ return PL_ALL.find(i=>plStatus(e,i.key)==="fazendo") || PL_ALL.find(i=>plStatus(e,i.key)!=="feito"); }
+function faseRange(e, a, b){
+  const base = planDate(e); if(!base) return null;
+  return planOf(e).base==="carrinho" ? [addDays(base,a), addDays(base,b)] : [addDays(base,(a-1)*7), addDays(base,b*7-1)];
+}
+function plNext(e){ const all=allItems(e); return all.find(i=>plStatus(e,i.key)==="fazendo") || all.find(i=>plStatus(e,i.key)!=="feito"); }
 function quemChip(q){ return AG[q] ? `<span class="pill acc">${esc(AG[q][0])}</span>` : `<span class="pill">${esc(QUEM[q]||q)}</span>`; }
 
 function renderMontagem(){
@@ -641,23 +685,23 @@ function renderMontagem(){
   const lista = experts.filter(e=>e.status!=="arquivado");
   if(!lista.length){ box.innerHTML = `<div class="notice"><b>Nenhum expert no funil ainda.</b> A montagem do negócio aparece aqui quando houver um expert.</div>`; return; }
   if(!lista.find(e=>e.id===mSel)){ const pref = lista.find(e=>SK[e.etapa]>=SK.onboarding) || lista[0]; mSel = pref.id; }
-  const e = lista.find(x=>x.id===mSel);
+  const e = lista.find(x=>x.id===mSel), pl = planOf(e);
   const g = plProgress(e), pct = Math.round(g.done/g.total*100), nx = plNext(e);
-  const dis = canWrite?"":"disabled";
-  const ini = e.inicioTeste||"";
-  const fases = PLANO.map(([fk,fn,w0,w1,obj,trava,its],fi)=>{
-    const items = its.map(([ik,t,q])=>({key:fk+"."+ik,t,q}));
-    const p = plProgress(e, items);
-    const ate = ini ? addDays(ini, w1*7-1) : "";
-    const late = ate && ate < today() && p.done<p.total;
-    return `<details class="fase" ${p.done<p.total?"open":""}>
-      <summary><span class="fn mono">Fase ${fi+1}</span><span class="ft">${esc(fn)}</span>
-        <span class="fw">${w0===w1?`Semana ${w0}`:`Semanas ${w0}–${w1}`}${ate?` · até <span class="mono">${fmtDate(ate)}</span>`:""}</span>
-        <span class="pill ${p.done===p.total?"good":late?"bad":""}">${p.done}/${p.total}${late?" · atrasada":""}</span></summary>
+  const dis = canWrite?"":"disabled", base = planDate(e), hoje = today();
+  const nNovos = allItems(e).filter(i=>i.novo).length;
+  const fases = pl.fases.map(([fk,fn,a,b,obj,trava,its],fi)=>{
+    const items = its.map(([ik,t,q,novo])=>({key:fk+"."+ik,t,q,novo:!!novo}));
+    const p = plProgress(e, items), r = faseRange(e,a,b);
+    const agora = r && r[0]<=hoje && hoje<=r[1];
+    const late = r && r[1] < hoje && p.done<p.total;
+    const quando = r ? `<span class="mono">${fmtDate(r[0])}</span> a <span class="mono">${fmtDate(r[1])}</span>` : (pl.base==="carrinho" ? "defina a abertura do carrinho" : (a===b?`Semana ${a}`:`Semanas ${a}–${b}`));
+    return `<details class="fase ${agora?"now":""}" ${p.done<p.total?"open":""}>
+      <summary><span class="fn mono">Fase ${fi+1}</span><span class="ft">${esc(fn)}</span><span class="fw">${quando}</span>
+        ${agora?`<span class="pill acc">Agora</span>`:""}<span class="pill ${p.done===p.total?"good":late?"bad":""}">${p.done}/${p.total}${late?" · atrasada":""}</span></summary>
       <p class="why" style="margin-top:6px">${esc(obj)}</p>${trava?`<div class="gate">${esc(trava)}</div>`:""}
       <div class="plitems">${items.map(it=>{ const s=plStatus(e,it.key); const ag=AG[it.q];
         return `<div class="pli ${s}"><button type="button" class="pst pill ${PST[s][1]}" data-pl="${it.key}" ${dis} title="Mudar o status">${PST[s][0]}</button>
-          <span class="plt">${esc(it.t)}</span><span class="plq">${quemChip(it.q)}</span>
+          <span class="plt">${esc(it.t)}${it.novo?` <span class="pill novo">acrescentado</span>`:""}</span><span class="plq">${quemChip(it.q)}</span>
           ${ag?`<span class="plb"><button class="btn sm" type="button" data-plcopy="${it.key}">Copiar</button><button class="btn sm primary" type="button" data-plask="${it.key}" ${dis}>Pedir</button></span>`:`<span class="plb"></span>`}</div>`; }).join("")}</div>
     </details>`;
   }).join("");
@@ -666,20 +710,22 @@ function renderMontagem(){
       <div class="d-id">${ava(e,"lg")}<div><h2 style="font-size:22px">${esc(e.nome)}</h2><div class="hd" style="color:var(--muted)">${esc(e.modelo||"")}${e.modelo?" · ":""}etapa ${esc(STAGES[SK[e.etapa]]?.n||"")}</div></div></div>
       <div class="mctl">
         <div class="fld"><label for="mSel">Expert</label><select id="mSel">${lista.map(x=>`<option value="${esc(x.id)}" ${x.id===mSel?"selected":""}>${esc(x.nome)}</option>`).join("")}</select></div>
-        <div class="fld"><label for="mInicio">Início do teste</label><input type="date" id="mInicio" value="${esc(ini)}" ${dis}></div>
+        <div class="fld"><label for="mModelo">Modelo do plano</label><select id="mModelo" ${dis}>${Object.entries(PLANOS).map(([k,v])=>`<option value="${k}" ${planOf(e)===v?"selected":""}>${esc(v.nome)}</option>`).join("")}</select></div>
+        <div class="fld"><label for="mInicio">${esc(pl.rotuloData)}</label><input type="date" id="mInicio" value="${esc(base)}" ${dis}></div>
       </div>
     </div>
     <div class="mtop">
       <div class="kpi"><div class="lbl">Montagem concluída</div><div class="val mono">${pct}%</div><div class="bar ${pct===100?"done":""}" style="margin-top:6px"><i style="width:${pct}%"></i></div><div class="sub">${g.done} de ${g.total} itens</div></div>
       <div class="kpi nextbox"><div class="lbl">Próximo passo</div>${nx?`<div class="nt">${esc(nx.t)}</div><div class="sub">${esc(nx.fase)} · ${AG[nx.q]?esc(AG[nx.q][0]):esc(QUEM[nx.q]||"")}</div>`:`<div class="nt">Tudo pronto. Hora de ler os marcos.</div>`}</div>
     </div>
-    <p class="why" style="margin:14px 0 0">Clique no status para avançar: a fazer → fazendo → feito. As fases seguem a ordem certa: números antes da página, página e checkout antes do tráfego.${ini?"":" Coloque a data de início do teste para ver o prazo de cada fase."}</p>
+    ${e.planoNota?`<div class="leitura" style="margin-top:12px"><b>Leitura do plano:</b> ${esc(e.planoNota)}</div>`:""}
+    <p class="why" style="margin:14px 0 0">Clique no status para avançar: a fazer → fazendo → feito.${nNovos?` Os ${nNovos} itens marcados como <span class="pill novo">acrescentado</span> não estavam no cronograma original.`:""}${base?"":` Preencha “${esc(pl.rotuloData)}” para ver as datas de cada fase.`}</p>
     <div class="fases">${fases}</div>`;
 }
 async function montagemClick(t){
   const e = experts.find(x=>x.id===(t.dataset.plopen||mSel)); if(!e) return;
   if(t.dataset.plopen){ mSel=e.id; closeDrawer(); setTab("montagem"); renderMontagem(); return; }
-  const key = t.dataset.pl||t.dataset.plcopy||t.dataset.plask; const it = PL_ALL.find(i=>i.key===key); if(!it) return;
+  const key = t.dataset.pl||t.dataset.plcopy||t.dataset.plask; const it = allItems(e).find(i=>i.key===key); if(!it) return;
   if(t.dataset.pl){ const cur=plStatus(e,key); const nxt = cur==="afazer"?"fazendo":cur==="fazendo"?"feito":"afazer";
     save(e.id,{plano:{...(e.plano||{}),[key]:nxt}}, `Montagem · ${it.t}: ${PST[nxt][0].toLowerCase()}`); return; }
   const a = AG[it.q]; if(!a) return;
