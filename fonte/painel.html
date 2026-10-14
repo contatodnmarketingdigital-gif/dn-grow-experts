@@ -1,0 +1,559 @@
+<title>DN Grow Experts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: cabeçalho + faixa de números + funil em colunas (kanban) + painel lateral do expert; aba da fila dos agentes */
+:root{
+  --bg:#F3F4F8; --surface:#FFFFFF; --surface-2:#ECEEF5; --line:#DADDEA;
+  --fg:#141729; --muted:#5C6280; --accent:#3346D3; --accent-soft:#E3E7FD; --accent-fg:#FFFFFF;
+  --good:#11845B; --good-soft:#DDF3EA; --warn:#B26A00; --warn-soft:#FBEFD9; --bad:#C2324A; --bad-soft:#FBE3E7;
+  --shadow:0 1px 2px rgba(20,23,41,.06),0 8px 24px rgba(20,23,41,.06);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Manrope",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1020; --surface:#171A2E; --surface-2:#1F2340; --line:#2B3054;
+  --fg:#E9EBF7; --muted:#9BA1C2; --accent:#7E8CFF; --accent-soft:#262C5C; --accent-fg:#0E1020;
+  --good:#45C995; --good-soft:#123528; --warn:#F0AE4A; --warn-soft:#3A2A10; --bad:#F27088; --bad-soft:#3D1620;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1020; --surface:#171A2E; --surface-2:#1F2340; --line:#2B3054;
+  --fg:#E9EBF7; --muted:#9BA1C2; --accent:#7E8CFF; --accent-soft:#262C5C; --accent-fg:#0E1020;
+  --good:#45C995; --good-soft:#123528; --warn:#F0AE4A; --warn-soft:#3A2A10; --bad:#F27088; --bad-soft:#3D1620;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:20px;padding-block:20px 48px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:40px;height:40px;border-radius:11px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:15px;letter-spacing:-.02em}
+.brand h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
+.tab .count{font-family:var(--f-mono);font-size:11px;background:var(--surface-2);padding:1px 6px;border-radius:99px;margin-left:6px}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.kpi .val{font-family:var(--f-display);font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.kpi .sub{font-size:12px;color:var(--muted)}
+.kpi.alert .val{color:var(--bad)}
+
+/* board */
+.board-wrap{overflow-x:auto;margin-top:20px;padding-bottom:8px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(232px,1fr);gap:12px;min-width:min-content}
+.col{background:var(--surface-2);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:180px}
+.col-h{display:flex;flex-direction:column;gap:2px;padding:2px 4px 6px}
+.col-h .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.col-h h3{font-size:14px;font-weight:700}
+.col-h .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.col-h .num{font-family:var(--f-mono);font-size:11px;color:var(--accent);font-weight:500}
+.col-h small{color:var(--muted);font-size:12px;line-height:1.35}
+.col .empty{font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);width:100%}
+.card:hover{border-color:var(--accent)}
+.card .nm{font-weight:700;font-size:14px;line-height:1.25}
+.card .hd{font-size:12px;color:var(--muted)}
+.bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.done i{background:var(--good)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.next{font-size:12px;color:var(--fg);border-top:1px solid var(--line);padding-top:8px}
+.next.late{color:var(--bad)}
+
+.archived{margin-top:24px}
+.archived summary{cursor:pointer;color:var(--muted);font-weight:600}
+.arch-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+
+/* empty state / status */
+.notice{margin-top:20px;background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:20px;color:var(--muted)}
+.notice b{color:var(--fg)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,12,25,.45);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--bg);z-index:21;overflow-y:auto;box-shadow:-12px 0 40px rgba(0,0,0,.2);padding:calc(env(safe-area-inset-top,0px) + 20px) 20px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.d-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.d-head h2{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.d-head .hd{color:var(--muted)}
+.stepper{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:16px}
+.step{border:0;background:none;padding:0;display:flex;flex-direction:column;gap:4px;text-align:left}
+.step i{height:6px;border-radius:99px;background:var(--line)}
+.step.past i{background:var(--good)}
+.step.cur i{background:var(--accent)}
+.step span{font-size:10px;color:var(--muted);font-weight:600;line-height:1.2}
+.step.cur span{color:var(--fg)}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.sec h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.sec .why{font-size:12px;color:var(--muted);margin:0 0 10px}
+.checks{display:flex;flex-direction:column;gap:2px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 4px;border-radius:8px;cursor:pointer}
+.chk:hover{background:var(--surface-2)}
+.chk input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.chk.on span{color:var(--muted);text-decoration:line-through}
+.gate{margin-top:10px;font-size:12px;padding:8px 10px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-weight:600}
+.gate.ok{background:var(--good-soft);color:var(--good)}
+.move{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.confirm{margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:var(--warn-soft);font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.confirm p{margin:0;flex:1 1 220px;color:var(--fg)}
+
+.agents{display:flex;flex-direction:column;gap:8px}
+.agent{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 12px;flex-wrap:wrap}
+.agent .who{font-weight:700;font-size:13px}
+.agent .skill{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.agent .what{font-size:12px;color:var(--muted);margin-top:2px}
+.agent > div{flex:1 1 260px;min-width:0}
+.agent .btns{display:flex;gap:6px;flex:none}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.fld input,.fld select,.fld textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+.fld textarea{min-height:90px;resize:vertical}
+.fld.full{grid-column:1/-1}
+
+.fit{display:flex;flex-direction:column;gap:8px}
+.fit-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.fit-row .t{font-size:13px}
+.fit-row .t small{display:block;color:var(--muted);font-size:11px}
+.dots{display:flex;gap:4px}
+.dot{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--bg);font-family:var(--f-mono);font-size:11px;padding:0}
+.dot.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.score{font-family:var(--f-display);font-size:34px;font-weight:800;letter-spacing:-.02em}
+
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12px}
+.hist li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px}
+.hist time{color:var(--muted)}
+
+/* fila */
+.queue{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between}
+.q > div{flex:1 1 320px;min-width:0}
+.q .top-line{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.q .task{margin-top:4px;font-size:13px}
+.q select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+/* método */
+.method{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:20px}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.mcard .num{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.mcard h3{font-size:16px;margin:2px 0 4px}
+.mcard p{margin:0 0 8px;color:var(--muted);font-size:13px}
+.mcard ul{margin:0;padding-left:18px;font-size:13px}
+.mcard .ag{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+
+.who-row{display:flex;gap:10px;align-items:center;min-width:0}
+.who-row > div{min-width:0}
+.ava{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:14px;border:2px solid var(--surface)}
+.ava.lg{width:64px;height:64px;font-size:22px;box-shadow:0 0 0 2px var(--accent)}
+.d-id{display:flex;gap:14px;align-items:center;min-width:0}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.m{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.m .v{font-family:var(--f-display);font-size:20px;font-weight:700;letter-spacing:-.01em}
+.m .l{font-size:11px;color:var(--muted);line-height:1.3}
+.m .c{font-size:11px;color:var(--accent);font-weight:600;margin-top:2px}
+.leitura{margin-top:12px;font-size:13px;padding:10px 12px;border-radius:10px;background:var(--accent-soft)}
+.leitura b{color:var(--accent)}
+.docs{margin:10px 0 0;padding-left:18px;font-size:12px;color:var(--muted)}
+.banner{margin-top:16px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
+.ro{font-size:12px;color:var(--muted);margin-top:8px}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">DN</div>
+      <div>
+        <h1>DN Grow Experts</h1>
+        <p>Funil de experts e possíveis sócios, da indicação à sociedade</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnNovo" type="button">+ Novo expert</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="funil" aria-selected="true">Funil</button>
+    <button class="tab" role="tab" data-tab="fila" aria-selected="false">Fila dos agentes <span class="count mono" id="qCount">0</span></button>
+    <button class="tab" role="tab" data-tab="metodo" aria-selected="false">Como funciona</button>
+  </nav>
+
+  <section id="p-funil">
+    <div class="kpis" id="kpis"></div>
+    <div id="boardStatus" class="notice"><b>Carregando o funil…</b> Os experts ficam salvos aqui e aparecem para todos que abrem o painel.</div>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <details class="archived" id="archBox" hidden><summary id="archSum">Arquivados</summary><div class="arch-list" id="archList"></div></details>
+  </section>
+
+  <section id="p-fila" hidden>
+    <div class="filters" id="qFilters"></div>
+    <div class="queue" id="queue"></div>
+  </section>
+
+  <section id="p-metodo" hidden>
+    <div class="method" id="method"></div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Detalhe do expert"></aside>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const STAGES = [
+  {k:"radar", n:"Radar", why:"Chegou a indicação. Antes de gastar tempo, registre de onde veio e o que ele já vende.",
+   items:[["origem","Origem registrada (quem indicou e por quê)"],["perfil","Perfil e links da bio salvos"],["produtos","Produtos, preços e plataforma levantados"],["conversa","Primeira conversa marcada"]],
+   agents:[["Diretor","","Abrir a pasta do expert em Documents/Clientes e montar a ficha inicial: produtos, preços, links da bio, quem indicou."]]},
+  {k:"diagnostico", n:"Raio-X", why:"Medir antes de opinar. O gargalo do expert decide se a gente resolve ou não.",
+   items:[["organico","Orgânico analisado (Reel mediano, engajamento, frequência)"],["base","Base atual: alunos ativos, faturamento e renovação"],["funil","Caminho bio → checkout mapeado"],["concorrente","Comparado com um concorrente de referência"],["gargalo","Gargalo principal escrito em uma frase"]],
+   agents:[["Diagnóstico orgânico","diagnostico-organico-instagram","Raio-X do Instagram: mediana dos Reels, engajamento, frequência e o gargalo do perfil."],["Joana · Mercado","joana-copy-infoproduto","Pesquisa de mercado: concorrentes, preço praticado, Biblioteca de Anúncios e linguagem do público."]]},
+  {k:"viabilidade", n:"Viabilidade", why:"A conta tem que fechar no papel antes de fechar na reunião.",
+   items:[["cpa","CPA máximo calculado para o ticket"],["cenarios","Cenários ruim, bom e excelente"],["linha","Linha de base de faturamento definida"],["modelo","Modelo escolhido: piloto, fixo + %, ou sociedade"],["vai","Decisão interna: vai ou não vai"]],
+   agents:[["Mídia e Dados","trafego-meta-ads-low-ticket","Conta do CPA máximo e cenários ruim/bom/excelente com o ticket e a base atual."],["Diretor","","Parecer estratégico: vale a pena? Qual modelo (piloto x sociedade) e qual linha de base."]]},
+  {k:"proposta", n:"Proposta", why:"Proposta clara, com marcos. Sociedade só depois de prova.",
+   items:[["deck","Proposta em PDF ou deck pronta"],["reuniao","Reunião feita"],["objecoes","Objeções registradas"],["ajuste","Contraproposta respondida"],["aceite","Aceite verbal"]],
+   agents:[["Apresentação","apresentacao-premium","Deck da proposta para a reunião, com números do Raio-X e da Viabilidade."],["Diretor","","Roteiro da reunião e resposta para cada objeção provável."]]},
+  {k:"contrato", n:"Contrato", why:"Quem recebe, quanto e quando sai. Sem isso, não começa.",
+   items:[["recebe","Quem recebe confirmado (CNPJ e conta)"],["percentual","Percentual e linha de base no papel"],["marcos","Marcos de saída e de virar sócio escritos"],["split","Split ou repasse configurado na plataforma"],["assinado","Contrato assinado"]],
+   agents:[["Diretor","","Checklist do contrato: quem recebe, percentual, linha de base, marcos e saída. Revisão final com advogado."]]},
+  {k:"onboarding", n:"Onboarding", why:"Acessos e ficha completos na primeira semana. Agente sem acesso não trabalha.",
+   items:[["bm","Acesso à BM, pixel e conta de anúncio"],["plataforma","Acesso à plataforma de vendas"],["insta","Acesso ao Instagram e ManyChat"],["ficha","Pasta e ficha oficial do expert"],["kickoff","Kickoff gravado"],["verba","Verba de tráfego definida"]],
+   agents:[["Diretor","","Ficha oficial do expert e plano dos primeiros 30 dias."],["Mídia e Dados","trafego-meta-ads-low-ticket","Conferir BM, pixel, eventos de compra e a conta de anúncio antes de subir."]]},
+  {k:"piloto", n:"Piloto 90 dias", why:"Os agentes trabalham aqui. Cada marco é um número, não uma impressão.",
+   items:[["oferta","Oferta e página revisadas"],["criativos","1ª rodada de criativos no ar"],["rotina","Rotina semanal ativa"],["m30","Marco de 30 dias batido"],["m60","Marco de 60 dias batido"],["m90","Marco de 90 dias batido"]],
+   agents:[["Joana · Copy","joana-copy-infoproduto","Oferta, página de vendas e textos dos anúncios do expert."],["Criativos","criativos-imagem","Primeira rodada de criativos estáticos, na regra 80/20."],["Vídeo","edicao-video-criativo","Transformar os vídeos do expert em criativos com gancho e legenda."],["Mídia e Dados","trafego-meta-ads-low-ticket","Leitura semanal da campanha: CPA, gargalo e o que pausar ou escalar."]]},
+  {k:"socio", n:"Sociedade", why:"Bateu os marcos? Agora a conversa de sociedade tem número na mesa.",
+   items:[["relatorio","Relatório dos 90 dias apresentado"],["decisao","Decisão de sociedade tomada"],["societario","Contrato societário assinado"]],
+   agents:[["Diretor","","Relatório dos 90 dias e recomendação: virar sócio, renovar o piloto ou sair."]]}
+];
+const FIT = [["audiencia","Audiência","tamanho e qualidade do público"],["produto","Produto","oferta pronta e que entrega"],["engajamento","Engajamento","o público responde"],["investe","Investe","topa colocar verba em tráfego"],["comercial","Comercial","tem time ou topa montar"]];
+const SK = Object.fromEntries(STAGES.map((s,i)=>[s.k,i]));
+const QSTAT = [["afazer","A fazer"],["fazendo","Fazendo"],["feito","Feito"]];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+const fmtDate = d => d ? d.split("-").reverse().slice(0,2).join("/") : "";
+const brl = v => (Number(v)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const nfmt = v => (Number(v)||0).toLocaleString("pt-BR");
+
+let db = null, canWrite = true;
+let experts = [], pedidos = [], openId = null, pendingMove = null, qFilter = "abertos";
+const queues = {};
+function enqueue(id, fn){ const p = (queues[id]||Promise.resolve()).then(fn, fn); queues[id] = p.catch(()=>{}); return p; }
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2600); }
+
+function stageProgress(e, k){ const s = STAGES[SK[k]]; const done = s.items.filter(([ik])=>e.checks?.[k+"."+ik]).length; return {done, total:s.items.length}; }
+function fitScore(e){ const f=e.fit||{}; return Math.round(FIT.reduce((a,[k])=>a+(Number(f[k])||0),0)/ (FIT.length*5) *100); }
+function scoreClass(v){ return v>=70?"good":v>=45?"warn":"bad"; }
+function isLate(e){ return e.proximaData && e.proximaData < today(); }
+
+/* ---------- render: KPIs ---------- */
+function renderKpis(){
+  const ativos = experts.filter(e=>e.status!=="arquivado");
+  const piloto = ativos.filter(e=>e.etapa==="piloto"||e.etapa==="socio").length;
+  const late = ativos.filter(isLate).length;
+  const meta = ativos.reduce((a,e)=>a+(Number(e.meta)||0),0);
+  const abertos = pedidos.filter(p=>p.status!=="feito").length;
+  $("#kpis").innerHTML = `
+    <div class="kpi"><div class="lbl">No funil</div><div class="val mono">${ativos.length}</div><div class="sub">${experts.length-ativos.length} arquivado(s)</div></div>
+    <div class="kpi"><div class="lbl">Em piloto ou sócios</div><div class="val mono">${piloto}</div><div class="sub">etapas 7 e 8</div></div>
+    <div class="kpi"><div class="lbl">Meta mensal somada</div><div class="val mono">${brl(meta)}</div><div class="sub">dos experts ativos</div></div>
+    <div class="kpi ${late?"alert":""}"><div class="lbl">Próximas ações atrasadas</div><div class="val mono">${late}</div><div class="sub">${late?"abra os cards em vermelho":"tudo em dia"}</div></div>
+    <div class="kpi"><div class="lbl">Pedidos aos agentes</div><div class="val mono">${abertos}</div><div class="sub">abertos na fila</div></div>`;
+  $("#qCount").textContent = abertos;
+}
+
+/* ---------- render: board ---------- */
+function renderBoard(){
+  const ativos = experts.filter(e=>e.status!=="arquivado");
+  $("#board").innerHTML = STAGES.map((s,i)=>{
+    const list = ativos.filter(e=>e.etapa===s.k).sort((a,b)=>(a.proximaData||"9")<(b.proximaData||"9")?-1:1);
+    return `<div class="col">
+      <div class="col-h"><div class="row"><span class="num">Etapa ${i+1}</span><span class="n">${list.length}</span></div><h3>${s.n}</h3></div>
+      ${list.length? list.map(cardHtml).join("") : `<div class="empty">Ninguém nesta etapa</div>`}
+    </div>`;
+  }).join("");
+  const arq = experts.filter(e=>e.status==="arquivado");
+  $("#archBox").hidden = !arq.length;
+  $("#archSum").textContent = `Arquivados (${arq.length})`;
+  $("#archList").innerHTML = arq.map(e=>`<button class="btn sm" data-open="${esc(e.id)}">${esc(e.nome)} · ${esc(e.motivo||"sem motivo")}</button>`).join("");
+}
+function ava(e, cls=""){
+  const ok = typeof e.foto==="string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(e.foto);
+  return ok ? `<img class="ava ${cls}" src="${e.foto}" alt="">` : `<span class="ava ${cls}" aria-hidden="true">${esc((e.nome||"?").trim().charAt(0).toUpperCase())}</span>`;
+}
+function perfilHtml(e){
+  const p = e.perfil; if(!p) return "";
+  return `<div class="sec"><h3>Relatório do perfil</h3><p class="why">${esc(p.fonte||"")}</p>
+    <div class="mgrid">${(p.metricas||[]).map(m=>`<div class="m"><div class="v mono">${esc(m.valor)}</div><div class="l">${esc(m.rotulo)}</div>${m.comparacao?`<div class="c">${esc(m.comparacao)}</div>`:""}</div>`).join("")}</div>
+    ${p.leitura?`<div class="leitura"><b>Leitura:</b> ${esc(p.leitura)}</div>`:""}
+    ${(p.relatorios||[]).length?`<ul class="docs">${p.relatorios.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`:""}
+  </div>`;
+}
+function cardHtml(e){
+  const p = stageProgress(e, e.etapa), sc = fitScore(e), pct = Math.round(p.done/p.total*100);
+  const late = isLate(e);
+  return `<button class="card" data-open="${esc(e.id)}" type="button">
+    <div class="who-row">${ava(e)}<div><div class="nm">${esc(e.nome)}</div><div class="hd">${esc(e.handle||"")}${e.nicho?" · "+esc(e.nicho):""}</div></div></div>
+    <div><div class="bar ${p.done===p.total?"done":""}"><i style="width:${pct}%"></i></div></div>
+    <div class="meta"><span class="pill ${p.done===p.total?"good":""}">${p.done}/${p.total} da etapa</span><span class="pill ${scoreClass(sc)}">Encaixe ${sc}</span>${e.modelo?`<span class="pill acc">${esc(e.modelo)}</span>`:""}</div>
+    ${e.proximaAcao?`<div class="next ${late?"late":""}">${late?"Atrasado · ":""}${e.proximaData?`<span class="mono">${fmtDate(e.proximaData)}</span> · `:""}${esc(e.proximaAcao)}</div>`:""}
+  </button>`;
+}
+
+/* ---------- drawer ---------- */
+function openDrawer(id){ openId=id; pendingMove=null; renderDrawer(); $("#scrim").hidden=false; $("#drawer").hidden=false; }
+function closeDrawer(){ openId=null; $("#scrim").hidden=true; $("#drawer").hidden=true; }
+function renderDrawer(){
+  const e = experts.find(x=>x.id===openId); if(!e){ closeDrawer(); return; }
+  const si = SK[e.etapa] ?? 0, s = STAGES[si], p = stageProgress(e, e.etapa), sc = fitScore(e);
+  const dis = canWrite?"":"disabled";
+  const scrollY = $("#drawer").scrollTop;
+  $("#drawer").innerHTML = `
+    <div class="d-head">
+      <div class="d-id">${ava(e,"lg")}<div><h2>${esc(e.nome)}</h2><div class="hd">${esc(e.handle||"")}${e.nicho?" · "+esc(e.nicho):""}${e.status==="arquivado"?` · <span class="pill bad">Arquivado: ${esc(e.motivo||"")}</span>`:""}</div>${e.modelo?`<div style="margin-top:4px"><span class="pill acc">${esc(e.modelo)}</span></div>`:""}</div></div>
+      <button class="btn sm" id="dClose" type="button" aria-label="Fechar">Fechar</button>
+    </div>
+    <div class="stepper">${STAGES.map((st,i)=>`<button class="step ${i<si?"past":i===si?"cur":""}" type="button" data-goto="${st.k}" ${dis} title="Mover para ${esc(st.n)}"><i></i><span>${esc(st.n)}</span></button>`).join("")}</div>
+    ${perfilHtml(e)}
+
+    <div class="sec">
+      <h3>Etapa ${si+1} · ${esc(s.n)}</h3>
+      <p class="why">${esc(s.why)}</p>
+      <div class="checks">${s.items.map(([ik,label])=>{const on=!!e.checks?.[s.k+"."+ik];return `<label class="chk ${on?"on":""}"><input type="checkbox" id="c-${s.k}-${ik}" data-chk="${s.k}.${ik}" ${on?"checked":""} ${dis}><span>${esc(label)}</span></label>`}).join("")}</div>
+      <div class="gate ${p.done===p.total?"ok":""}">${p.done===p.total?"Etapa completa. Pode avançar.":`Faltam ${p.total-p.done} de ${p.total} itens para liberar a próxima etapa.`}</div>
+      <div class="move">
+        ${si>0?`<button class="btn sm" type="button" data-step="-1" ${dis}>← Voltar etapa</button>`:""}
+        ${si<STAGES.length-1?`<button class="btn sm primary" type="button" data-step="1" ${dis}>Avançar para ${esc(STAGES[si+1].n)} →</button>`:""}
+        ${e.status==="arquivado"?`<button class="btn sm" type="button" id="dUnarch" ${dis}>Reativar</button>`:`<button class="btn sm ghost" type="button" id="dArch" ${dis}>Arquivar</button>`}
+      </div>
+      ${pendingMove?pendingMove.html:""}
+    </div>
+
+    <div class="sec">
+      <h3>Agentes desta etapa</h3>
+      <p class="why">“Pedir” coloca a tarefa na fila dos agentes. “Copiar” copia o pedido pronto para colar no Claude.</p>
+      <div class="agents">${s.agents.map(([who,skill,what],ai)=>`
+        <div class="agent"><div><div class="who">${esc(who)}</div>${skill?`<div class="skill">${esc(skill)}</div>`:""}<div class="what">${esc(what)}</div></div>
+        <div class="btns"><button class="btn sm" type="button" data-copy="${ai}">Copiar</button><button class="btn sm primary" type="button" data-ask="${ai}" ${dis}>Pedir</button></div></div>`).join("")}</div>
+    </div>
+
+    <div class="sec">
+      <h3>Próxima ação</h3>
+      <div class="grid2" style="margin-top:8px">
+        <div class="fld full"><label for="f-proximaAcao">O que fazer</label><input id="f-proximaAcao" data-f="proximaAcao" value="${esc(e.proximaAcao)}" ${dis}></div>
+        <div class="fld"><label for="f-proximaData">Até quando</label><input type="date" id="f-proximaData" data-f="proximaData" value="${esc(e.proximaData)}" ${dis}></div>
+        <div class="fld"><label for="f-responsavel">Responsável</label><input id="f-responsavel" data-f="responsavel" value="${esc(e.responsavel)}" ${dis}></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div><h3>Encaixe</h3><p class="why">Nota de 0 a 5 em cada critério. Abaixo de 45, pense duas vezes antes da proposta.</p></div>
+        <div class="score mono" style="color:var(--${scoreClass(sc)})">${sc}</div>
+      </div>
+      <div class="fit">${FIT.map(([k,t,sub])=>`<div class="fit-row"><div class="t">${t}<small>${sub}</small></div><div class="dots">${[0,1,2,3,4,5].map(v=>`<button type="button" class="dot ${(Number(e.fit?.[k])||0)===v?"on":""}" data-fit="${k}" data-v="${v}" aria-label="${t} ${v}" ${dis}>${v}</button>`).join("")}</div></div>`).join("")}</div>
+    </div>
+
+    <div class="sec">
+      <h3>Ficha</h3>
+      <div class="grid2" style="margin-top:8px">
+        ${fld("nome","Nome")}${fld("handle","Instagram")}${fld("nicho","Nicho")}${fld("origem","Origem / quem indicou")}
+        ${fld("seguidores","Seguidores","number")}${fld("faturamento","Faturamento atual / mês (R$)","number")}
+        ${fld("meta","Meta mensal (R$)","number")}
+        <div class="fld"><label for="f-modelo">Modelo</label><select id="f-modelo" data-f="modelo" ${dis}>${["","Piloto 90 dias","Fixo + %","Sociedade","Sociedade 60/40 + teste 90 dias"].map(m=>`<option ${e.modelo===m?"selected":""} value="${m}">${m||"A definir"}</option>`).join("")}</select></div>
+        <div class="fld full"><label for="f-pasta">Pasta do cliente</label><input id="f-pasta" data-f="pasta" value="${esc(e.pasta)}" placeholder="Documents/Clientes/Nome" ${dis}></div>
+        <div class="fld full"><label for="f-notas">Notas</label><textarea id="f-notas" data-f="notas" ${dis}>${esc(e.notas)}</textarea></div>
+      </div>
+      ${canWrite?"":`<p class="ro">Você está vendo em modo leitura.</p>`}
+    </div>
+
+    <div class="sec">
+      <h3>Histórico</h3>
+      <ul class="hist">${(e.historico||[]).slice().reverse().map(h=>`<li><time class="mono">${esc(fmtDate(h.em?.slice(0,10)))}/${esc(h.em?.slice(2,4))}</time><span>${esc(h.txt)}</span></li>`).join("")||`<li><span></span><span style="color:var(--muted)">Sem registros ainda.</span></li>`}</ul>
+    </div>`;
+  $("#drawer").scrollTop = scrollY;
+  function fld(k,l,t="text"){ return `<div class="fld"><label for="f-${k}">${l}</label><input id="f-${k}" type="${t}" data-f="${k}" value="${esc(e[k])}" ${dis}></div>`; }
+}
+
+/* ---------- writes ---------- */
+function ref(id){ return db.collection("experts").doc(id); }
+async function save(id, patch, logTxt){
+  if(!db){ toast("O painel ainda não conectou ao banco."); return; }
+  const e = experts.find(x=>x.id===id);
+  const body = {...patch, atualizadoEm:new Date().toISOString()};
+  if(logTxt){ body.historico = [...(e?.historico||[]), {em:new Date().toISOString(), txt:logTxt}].slice(-60); }
+  try{ await enqueue(id, ()=>ref(id).update(body)); }
+  catch(err){ if(err?.code==="invalid_argument"&&!canWrite){} else if(err?.code==="invalid_argument"){ canWrite=false; renderDrawer(); toast("Você não tem permissão para editar este painel."); } else toast("Não salvou. Tente de novo em instantes."); }
+}
+function promptFor(e, s, a){
+  const [who,skill,what]=a;
+  return `${skill?`Use a skill ${skill}. `:""}Expert: ${e.nome}${e.handle?" ("+e.handle+")":""}${e.nicho?", nicho "+e.nicho:""}. Etapa do funil DN Grow: ${s.n}.
+Tarefa (${who}): ${what}
+${e.pasta?`Pasta do cliente: ${e.pasta}. Salve a entrega lá e em PDF.`:"Salve a entrega na pasta do cliente em Documents/Clientes, em PDF."}
+${e.notas?`Contexto: ${e.notas}`:""}
+Ao terminar, marque o pedido como feito na fila do DN Grow Experts.`.trim();
+}
+
+async function moveTo(e, k, force){
+  const cur = SK[e.etapa], to = SK[k];
+  if(to===cur) return;
+  const p = stageProgress(e, e.etapa);
+  if(to>cur && p.done<p.total && !force){
+    pendingMove = {k, html:`<div class="confirm"><p>Faltam ${p.total-p.done} itens de <b>${esc(STAGES[cur].n)}</b>. Pular etapa costuma voltar como problema mais à frente.</p><button class="btn sm" type="button" data-cancelmove>Cancelar</button><button class="btn sm primary" type="button" data-forcemove="${k}">Avançar mesmo assim</button></div>`};
+    renderDrawer(); return;
+  }
+  pendingMove=null;
+  await save(e.id, {etapa:k}, `Moveu de ${STAGES[cur].n} para ${STAGES[to].n}${to>cur&&p.done<p.total?` com ${p.total-p.done} itens pendentes`:""}`);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async ev=>{
+  const t = ev.target.closest("button,[data-open]"); if(!t) return;
+  if(t.dataset.open){ openDrawer(t.dataset.open); return; }
+  if(t.classList.contains("tab")){ setTab(t.dataset.tab); return; }
+  if(t.id==="btnNovo"){ novo(); return; }
+  if(t.id==="dClose"){ closeDrawer(); return; }
+  if(t.dataset.qf){ qFilter=t.dataset.qf; renderQueue(); return; }
+  if(t.dataset.qdel){ if(db) try{ await db.collection("pedidos").doc(t.dataset.qdel).delete(); toast("Pedido removido"); }catch{ toast("Não removeu."); } return; }
+  if(t.dataset.qcopy){ const p=pedidos.find(x=>x.id===t.dataset.qcopy); copy(p?.prompt||""); return; }
+  const e = experts.find(x=>x.id===openId); if(!e) return;
+  const s = STAGES[SK[e.etapa]??0];
+  if(t.dataset.step){ const to = STAGES[(SK[e.etapa]??0)+Number(t.dataset.step)]; if(to) moveTo(e,to.k,false); return; }
+  if(t.dataset.goto){ moveTo(e,t.dataset.goto,false); return; }
+  if(t.dataset.forcemove){ moveTo(e,t.dataset.forcemove,true); return; }
+  if(t.hasAttribute("data-cancelmove")){ pendingMove=null; renderDrawer(); return; }
+  if(t.dataset.fit){ save(e.id,{fit:{...(e.fit||{}),[t.dataset.fit]:Number(t.dataset.v)}}); return; }
+  if(t.dataset.copy){ copy(promptFor(e,s,s.agents[Number(t.dataset.copy)])); return; }
+  if(t.dataset.ask){ const a=s.agents[Number(t.dataset.ask)];
+    try{ await db.collection("pedidos").add({expertId:e.id, expertNome:e.nome, etapa:s.k, agente:a[0], skill:a[1], tarefa:a[2], prompt:promptFor(e,s,a), status:"afazer", criadoEm:new Date().toISOString()});
+      await save(e.id,{},`Pedido para ${a[0]}: ${a[2]}`); toast(`Pedido enviado para ${a[0]}`);
+    }catch{ toast("Não enviou o pedido. Tente de novo."); } return; }
+  if(t.id==="dArch"){ pendingMove={html:`<div class="confirm"><p>Por que não seguiu?</p><input id="archMotivo" class="btn" style="flex:1 1 200px;text-align:left" placeholder="ex.: não quis investir em tráfego"><button class="btn sm primary" type="button" id="archOk">Arquivar</button><button class="btn sm" type="button" data-cancelmove>Cancelar</button></div>`}; renderDrawer(); $("#archMotivo")?.focus(); return; }
+  if(t.id==="archOk"){ const m=$("#archMotivo")?.value.trim()||"sem motivo"; pendingMove=null; await save(e.id,{status:"arquivado",motivo:m},`Arquivado: ${m}`); return; }
+  if(t.id==="dUnarch"){ await save(e.id,{status:"ativo",motivo:""},"Reativado"); return; }
+});
+document.addEventListener("change", ev=>{
+  const el = ev.target; const e = experts.find(x=>x.id===openId);
+  if(el.dataset.qstat){ const id=el.dataset.qstat; if(db) enqueue("q"+id,()=>db.collection("pedidos").doc(id).update({status:el.value, atualizadoEm:new Date().toISOString()})).catch(()=>toast("Não salvou.")); return; }
+  if(!e) return;
+  if(el.dataset.chk){ const [sk,ik]=el.dataset.chk.split("."); const label=STAGES[SK[sk]].items.find(i=>i[0]===ik)[1];
+    save(e.id,{checks:{...(e.checks||{}),[el.dataset.chk]:el.checked}}, `${el.checked?"Concluiu":"Desmarcou"}: ${label}`); return; }
+  if(el.dataset.f){ const k=el.dataset.f; let v=el.value; if(el.type==="number") v = v===""?null:Number(v);
+    if((e[k]??"")===(v??"")) return; save(e.id,{[k]:v}, k==="proximaAcao"&&v?`Próxima ação: ${v}`:null); }
+});
+$("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", ev=>{ if(ev.key==="Escape" && openId) closeDrawer(); });
+
+async function copy(txt){
+  try{ await navigator.clipboard.writeText(txt); toast("Pedido copiado. Cole no Claude."); }
+  catch{ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("Pedido copiado.");}catch{ toast("Selecione e copie o texto manualmente."); } ta.remove(); }
+}
+async function novo(){
+  if(!db){ toast("O painel ainda não conectou ao banco."); return; }
+  if(!canWrite){ toast("Você está em modo leitura."); return; }
+  try{
+    const r = await db.collection("experts").add({nome:"Novo expert", handle:"", nicho:"", origem:"", etapa:"radar", status:"ativo", checks:{}, fit:{}, responsavel:"", proximaAcao:"Registrar origem e produtos", proximaData:today(), criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString(), historico:[{em:new Date().toISOString(), txt:"Entrou no Radar"}]});
+    openId = r.id; setTimeout(()=>{ openDrawer(r.id); $("#f-nome")?.select(); }, 120);
+  }catch(err){ toast(err?.code==="quota_exceeded"?"O banco do painel está cheio.":"Não criou. Tente de novo."); }
+}
+
+/* ---------- fila ---------- */
+function renderQueue(){
+  const filters=[["abertos","Abertos"],["afazer","A fazer"],["fazendo","Fazendo"],["feito","Feitos"],["todos","Todos"]];
+  $("#qFilters").innerHTML = filters.map(([k,l])=>`<button class="chip" type="button" data-qf="${k}" aria-pressed="${qFilter===k}">${l}</button>`).join("");
+  let list = pedidos.slice().sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""));
+  if(qFilter==="abertos") list=list.filter(p=>p.status!=="feito"); else if(qFilter!=="todos") list=list.filter(p=>p.status===qFilter);
+  const dis = canWrite?"":"disabled";
+  $("#queue").innerHTML = list.length ? list.map(p=>`<div class="q"><div>
+      <div class="top-line"><b>${esc(p.agente)}</b>${p.skill?`<span class="pill acc mono">${esc(p.skill)}</span>`:""}<span class="pill">${esc(p.expertNome)}</span><span class="pill">${esc(STAGES[SK[p.etapa]]?.n||p.etapa)}</span><span class="mono" style="font-size:11px;color:var(--muted)">${esc(fmtDate((p.criadoEm||"").slice(0,10)))}</span></div>
+      <div class="task">${esc(p.tarefa)}</div></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <select aria-label="Status do pedido" id="qs-${esc(p.id)}" data-qstat="${esc(p.id)}" ${dis}>${QSTAT.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select>
+        <button class="btn sm" type="button" data-qcopy="${esc(p.id)}">Copiar</button>
+        ${canWrite?`<button class="btn sm ghost" type="button" data-qdel="${esc(p.id)}">Remover</button>`:""}
+      </div></div>`).join("")
+    : `<div class="notice">Nenhum pedido aqui. Abra um expert no Funil e use <b>Pedir</b> no agente da etapa. O Claude lê esta fila quando você disser “roda a fila do DN Grow”.</div>`;
+}
+
+/* ---------- método ---------- */
+function renderMethod(){
+  $("#method").innerHTML = STAGES.map((s,i)=>`<div class="mcard"><div class="num">Etapa ${i+1}</div><h3>${esc(s.n)}</h3><p>${esc(s.why)}</p>
+    <ul>${s.items.map(([,l])=>`<li>${esc(l)}</li>`).join("")}</ul>
+    <div class="ag">${s.agents.map(a=>`<span class="pill acc">${esc(a[0])}</span>`).join("")}</div></div>`).join("");
+}
+
+function setTab(k){
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===k)));
+  ["funil","fila","metodo"].forEach(x=>$("#p-"+x).hidden = x!==k);
+  try{ localStorage.setItem("dngrow-tab",k); }catch{}
+}
+
+function renderAll(){ renderKpis(); renderBoard(); renderQueue(); if(openId) renderDrawer(); }
+
+/* ---------- boot ---------- */
+renderMethod(); renderKpis(); renderBoard(); renderQueue();
+try{ const t=localStorage.getItem("dngrow-tab"); if(t) setTab(t); }catch{}
+async function bootStatic(){
+  // Versão do GitHub Pages: lê a foto do funil em dados.json, só leitura.
+  try{
+    const r = await fetch("dados.json",{cache:"no-store"}); if(!r.ok) throw 0;
+    const d = await r.json();
+    experts = d.experts||[]; pedidos = d.pedidos||[]; canWrite=false;
+    $("#btnNovo").hidden = true;
+    $("#boardStatus").hidden = experts.length>0;
+    if(!experts.length) $("#boardStatus").innerHTML = "<b>Nenhum expert no funil ainda.</b>";
+    const b=document.createElement("div"); b.className="banner";
+    b.innerHTML=`<span class="pill">Versão online · só leitura</span><span>Atualizada em <span class="mono">${esc(d.atualizadoEm||"")}</span>. As edições são feitas no painel do Claude.</span>`;
+    $("#p-funil").prepend(b);
+    renderAll();
+  }catch{ $("#boardStatus").innerHTML = "<b>Não foi possível carregar os dados do funil.</b> Recarregue a página."; $("#btnNovo").hidden=true; }
+}
+(async()=>{
+  if(!window.claude?.use){ bootStatic(); return; }
+  db = await window.claude.use("db") ?? null;
+  const user = await window.claude?.use?.("user") ?? null;
+  if(!db){ $("#boardStatus").innerHTML = "<b>Não foi possível abrir o banco do painel.</b> Entre na sua conta do Claude para ver e editar os experts."; $("#btnNovo").disabled=true; return; }
+  try{ const c = await user?.can?.("data.write"); if(c===false){ canWrite=false; $("#btnNovo").disabled=true; } }catch{}
+  db.collection("experts").onSnapshot(snap=>{
+    experts = snap.docs.map(d=>({id:d.id,...d.data()}));
+    $("#boardStatus").hidden = experts.length>0;
+    if(!experts.length) $("#boardStatus").innerHTML = "<b>Nenhum expert no funil ainda.</b> Clique em “+ Novo expert” para colocar o primeiro no Radar.";
+    renderAll();
+  }, ()=>{ $("#boardStatus").hidden=false; $("#boardStatus").innerHTML="<b>A conexão com o banco caiu.</b> Recarregue a página."; });
+  db.collection("pedidos").onSnapshot(snap=>{ pedidos = snap.docs.map(d=>({id:d.id,...d.data()})); renderKpis(); renderQueue(); }, ()=>{});
+})();
+</script>
