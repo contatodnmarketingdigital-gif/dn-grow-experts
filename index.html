@@ -183,6 +183,28 @@ button{cursor:pointer}
 .leitura{margin-top:12px;font-size:13px;padding:10px 12px;border-radius:10px;background:var(--accent-soft)}
 .leitura b{color:var(--accent)}
 .docs{margin:10px 0 0;padding-left:18px;font-size:12px;color:var(--muted)}
+.mhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:20px}
+.mctl{display:flex;gap:10px;flex-wrap:wrap}
+.mctl .fld{min-width:180px;flex:1 1 180px}
+.mctl select,.mctl input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.mtop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;margin-top:16px}
+@media (max-width:640px){.mtop{grid-template-columns:1fr}}
+.nextbox{border-color:var(--accent)}
+.nextbox .nt{font-family:var(--f-display);font-size:19px;font-weight:700;line-height:1.25;margin-top:4px}
+.fases{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.fase{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.fase summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;list-style:none}
+.fase summary::-webkit-details-marker{display:none}
+.fase .fn{font-size:11px;color:var(--accent)}
+.fase .ft{font-family:var(--f-display);font-weight:700;font-size:16px}
+.fase .fw{font-size:12px;color:var(--muted);flex:1 1 auto}
+.plitems{display:flex;flex-direction:column;margin-top:8px}
+.pli{display:grid;grid-template-columns:86px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.pli .pst{border:0;justify-content:center;cursor:pointer}
+.pli .pst:disabled{cursor:default}
+.pli.feito .plt{color:var(--muted);text-decoration:line-through}
+.plb{display:flex;gap:6px}
+@media (max-width:640px){.pli{grid-template-columns:86px minmax(0,1fr)}.plq,.plb{grid-column:2}}
 .banner{margin-top:16px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
 .ro{font-size:12px;color:var(--muted);margin-top:8px}
@@ -205,6 +227,7 @@ button{cursor:pointer}
 
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="funil" aria-selected="true">Funil</button>
+    <button class="tab" role="tab" data-tab="montagem" aria-selected="false">Montagem do negócio</button>
     <button class="tab" role="tab" data-tab="fila" aria-selected="false">Fila dos agentes <span class="count mono" id="qCount">0</span></button>
     <button class="tab" role="tab" data-tab="metodo" aria-selected="false">Como funciona</button>
   </nav>
@@ -219,6 +242,10 @@ button{cursor:pointer}
   <section id="p-fila" hidden>
     <div class="filters" id="qFilters"></div>
     <div class="queue" id="queue"></div>
+  </section>
+
+  <section id="p-montagem" hidden>
+    <div id="montagem"></div>
   </section>
 
   <section id="p-metodo" hidden>
@@ -348,6 +375,7 @@ function renderDrawer(){
       <button class="btn sm" id="dClose" type="button" aria-label="Fechar">Fechar</button>
     </div>
     <div class="stepper">${STAGES.map((st,i)=>`<button class="step ${i<si?"past":i===si?"cur":""}" type="button" data-goto="${st.k}" ${dis} title="Mover para ${esc(st.n)}"><i></i><span>${esc(st.n)}</span></button>`).join("")}</div>
+    ${SK[e.etapa]>=SK.contrato ? (()=>{ const g=plProgress(e), nx=plNext(e), pct=Math.round(g.done/g.total*100); return `<div class="sec"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Montagem do negócio · <span class="mono">${pct}%</span></h3><p class="why" style="margin:0">${nx?`Próximo passo: ${esc(nx.t)} (${esc(nx.fase)})`:"Montagem completa."}</p></div><button class="btn sm primary" type="button" data-plopen="${esc(e.id)}">Abrir a montagem</button></div><div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div></div>`; })() : ""}
     ${perfilHtml(e)}
 
     <div class="sec">
@@ -450,6 +478,7 @@ document.addEventListener("click", async ev=>{
   if(t.dataset.qf){ qFilter=t.dataset.qf; renderQueue(); return; }
   if(t.dataset.qdel){ if(db) try{ await db.collection("pedidos").doc(t.dataset.qdel).delete(); toast("Pedido removido"); }catch{ toast("Não removeu."); } return; }
   if(t.dataset.qcopy){ const p=pedidos.find(x=>x.id===t.dataset.qcopy); copy(p?.prompt||""); return; }
+  if(t.dataset.pl || t.dataset.plcopy || t.dataset.plask || t.dataset.plopen){ montagemClick(t); return; }
   const e = experts.find(x=>x.id===openId); if(!e) return;
   const s = STAGES[SK[e.etapa]??0];
   if(t.dataset.step){ const to = STAGES[(SK[e.etapa]??0)+Number(t.dataset.step)]; if(to) moveTo(e,to.k,false); return; }
@@ -468,6 +497,8 @@ document.addEventListener("click", async ev=>{
 });
 document.addEventListener("change", ev=>{
   const el = ev.target; const e = experts.find(x=>x.id===openId);
+  if(el.id==="mSel"){ mSel=el.value; try{localStorage.setItem("dngrow-m",mSel);}catch{} renderMontagem(); return; }
+  if(el.id==="mInicio"){ const ex=experts.find(x=>x.id===mSel); if(ex && (ex.inicioTeste||"")!==el.value) save(ex.id,{inicioTeste:el.value},`Início do teste: ${fmtDate(el.value)}`); return; }
   if(el.dataset.qstat){ const id=el.dataset.qstat; if(db) enqueue("q"+id,()=>db.collection("pedidos").doc(id).update({status:el.value, atualizadoEm:new Date().toISOString()})).catch(()=>toast("Não salvou.")); return; }
   if(!e) return;
   if(el.dataset.chk){ const [sk,ik]=el.dataset.chk.split("."); const label=STAGES[SK[sk]].items.find(i=>i[0]===ik)[1];
@@ -516,13 +547,159 @@ function renderMethod(){
     <div class="ag">${s.agents.map(a=>`<span class="pill acc">${esc(a[0])}</span>`).join("")}</div></div>`).join("");
 }
 
+/* ---------- montagem do negócio ---------- */
+const AG = {diretor:["Diretor",""], midia:["Mídia e Dados","trafego-meta-ads-low-ticket"], joana:["Joana","joana-copy-infoproduto"], criativos:["Criativos","criativos-imagem"], video:["Vídeo","edicao-video-criativo"], rel:["Relacionamento","social-seller-instagram"]};
+const QUEM = {nos:"Nós", expert:"Expert", ambos:"Nós + expert"};
+// [chave, nome, semana início, semana fim, objetivo, trava, itens: [chave, tarefa, quem]]
+const PLANO = [
+  ["acessos","Acessos e rastreio",1,1,"Sem acesso e sem pixel, nenhum agente trabalha e nenhum número é confiável.","",[
+    ["bm","Acesso de administrador à BM e à conta de anúncio","expert"],
+    ["pixel","Pixel e API de conversão instalados e testados","midia"],
+    ["greenn","Acesso de colaborador na Greenn (vendas, produtos, relatórios)","expert"],
+    ["insta","Acesso ao Instagram, ManyChat e Meta Business Suite","expert"],
+    ["whats","Número de WhatsApp comercial definido","expert"],
+    ["pasta","Pasta com logo, fotos, depoimentos e vídeos da expert","expert"]]],
+  ["vendas","Raio-X das vendas",1,1,"Partir do que já vende. A linha de base do teste sai daqui.","",[
+    ["export","Vendas dos últimos 90 dias por produto exportadas da Greenn","nos"],
+    ["metricas","Ticket médio, renovação, cancelamento e LTV calculados","diretor"],
+    ["linhabase","Linha de base de faturamento mensal registrada e aceita pelos dois","ambos"],
+    ["rapidos","Ganhos rápidos ligados: renovação automática e recuperação de Pix e boleto","expert"],
+    ["lista","Lista de alunas e leads organizada para remarketing","nos"]]],
+  ["produtos","Funil de produtos",1,1,"Decidir a escada de produtos antes de escrever uma linha de copy.","",[
+    ["mapa","Mapa dos produtos atuais com preço, entrega e margem","diretor"],
+    ["entrada","Produto de entrada definido (o que o anúncio vende)","diretor"],
+    ["principal","Produto principal e recorrência definidos","diretor"],
+    ["alto","Produto de ticket alto definido (consultoria ou acompanhamento)","diretor"],
+    ["bump","Order bump e upsell definidos","joana"],
+    ["carro","Carro-chefe do teste escolhido e registrado","ambos"]]],
+  ["numeros","Estratégia e números",2,2,"A conta do CPA decide a verba, o ticket e se a oferta para de pé.","Não suba campanha antes de fechar esta fase.",[
+    ["ticket","Ticket final do carro-chefe definido","ambos"],
+    ["custos","Custos por venda: taxa da Greenn, imposto e divisão 60/40","midia"],
+    ["cpa","CPA máximo e CPA alvo calculados","midia"],
+    ["verba","Verba diária do teste e quem paga definidos","ambos"],
+    ["marcos","Marcos de 30, 60 e 90 dias em número (faturamento, vendas, CPA)","diretor"],
+    ["calendario","Calendário do teste com as datas comerciais (Black Friday, janeiro)","diretor"]]],
+  ["oferta","Oferta e mensagem",2,2,"Linguagem do público e oferta fortes antes da página.","",[
+    ["pesquisa","Pesquisa de mercado e de concorrentes","joana"],
+    ["avatar","Avatar e nível de consciência do público","joana"],
+    ["promessa","Promessa, mecanismo e nome da oferta","joana"],
+    ["bonus","Bônus, garantia e ancoragem de preço","joana"],
+    ["provas","Depoimentos e prints de resultado das alunas reunidos","expert"],
+    ["objecoes","Objeções e respostas","joana"]]],
+  ["greenn","Produto na Greenn",2,3,"Checkout pronto e testado, e o dinheiro cai no lugar certo.","",[
+    ["produto","Produto criado ou ajustado (nome, descrição, entrega)","nos"],
+    ["ofertas","Ofertas e preços cadastrados (à vista, parcelado, recorrente)","nos"],
+    ["checkout","Checkout personalizado (foto, cores, depoimentos, garantia)","nos"],
+    ["bumpg","Order bump e upsell de um clique configurados","nos"],
+    ["split","Split ou coprodução 60/40 configurado","ambos"],
+    ["entrega","Área de membros e e-mail de acesso funcionando","expert"],
+    ["pixelg","Pixel e evento de compra ligados no checkout","midia"],
+    ["teste","Compra teste feita e reembolsada","nos"]]],
+  ["pagina","Página de vendas",3,3,"Página que converte no celular, medida do clique à compra.","",[
+    ["copy","Copy da página bloco a bloco","joana"],
+    ["wire","Estrutura da página no celular aprovada","joana"],
+    ["build","Página montada e publicada no domínio","nos"],
+    ["utm","UTMs e eventos (ViewContent, InitiateCheckout, Purchase) conferidos","midia"],
+    ["mobile","Velocidade e leitura no celular testadas","nos"],
+    ["aprov","Página aprovada pela expert","expert"]]],
+  ["criativos","Criativos",2,3,"Criativo nativo nasce da pesquisa do que converte: 80% do que funciona, 20% de teste.","",[
+    ["ref","Pesquisa na Biblioteca de Anúncios do nicho","joana"],
+    ["roteiros","Roteiros com 5 ganchos para a expert gravar","joana"],
+    ["gravacao","Gravação feita pela expert","expert"],
+    ["edicao","Vídeos editados com gancho e legenda","video"],
+    ["estaticos","Criativos estáticos de apoio","criativos"],
+    ["textos","Textos dos anúncios","joana"]]],
+  ["captacao","Captação e relacionamento",3,3,"Quem não compra no primeiro clique precisa de um caminho de volta.","",[
+    ["bio","Link da bio com captura (quiz ou página)","nos"],
+    ["manychat","ManyChat com palavras-chave e fluxo até o checkout","rel"],
+    ["script","Roteiro de atendimento no WhatsApp","rel"],
+    ["recupera","Recuperação de checkout abandonado e de Pix","rel"],
+    ["boasvindas","Boas-vindas e check-in das novas alunas","rel"]]],
+  ["trafego","Tráfego no ar",4,4,"Campanha só sobe com Números, Greenn e Página completos.","Depende das fases Estratégia e números, Produto na Greenn e Página de vendas.",[
+    ["estrutura","Estrutura de campanha e públicos","midia"],
+    ["subida","Campanha publicada com o sim da expert","midia"],
+    ["diaria","Leitura diária: pausar, manter ou escalar","midia"],
+    ["semanal","Relatório semanal com CPA e gargalo","midia"]]],
+  ["rotina","Rotina e marcos",1,13,"Os marcos decidem se o teste vira sociedade.","",[
+    ["reuniao","Reunião semanal com a expert marcada na agenda","nos"],
+    ["m30","Relatório e decisão do marco de 30 dias","diretor"],
+    ["m60","Relatório e decisão do marco de 60 dias","diretor"],
+    ["m90","Relatório final dos 90 dias","diretor"]]]
+];
+const PL_ALL = PLANO.flatMap(([fk,fn,,,,,its])=>its.map(([ik,t,q])=>({key:fk+"."+ik, fase:fn, t, q})));
+const PST = {afazer:["A fazer",""], fazendo:["Fazendo","warn"], feito:["Feito","good"]};
+let mSel = null; try{ mSel = localStorage.getItem("dngrow-m"); }catch{}
+
+function plStatus(e,key){ return e.plano?.[key] || "afazer"; }
+function plProgress(e, items){ const its = items || PL_ALL; return {done: its.filter(i=>plStatus(e,i.key||i)==="feito").length, total: its.length}; }
+function addDays(iso, n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function plNext(e){ return PL_ALL.find(i=>plStatus(e,i.key)==="fazendo") || PL_ALL.find(i=>plStatus(e,i.key)!=="feito"); }
+function quemChip(q){ return AG[q] ? `<span class="pill acc">${esc(AG[q][0])}</span>` : `<span class="pill">${esc(QUEM[q]||q)}</span>`; }
+
+function renderMontagem(){
+  const box = $("#montagem"); if(!box) return;
+  const lista = experts.filter(e=>e.status!=="arquivado");
+  if(!lista.length){ box.innerHTML = `<div class="notice"><b>Nenhum expert no funil ainda.</b> A montagem do negócio aparece aqui quando houver um expert.</div>`; return; }
+  if(!lista.find(e=>e.id===mSel)){ const pref = lista.find(e=>SK[e.etapa]>=SK.onboarding) || lista[0]; mSel = pref.id; }
+  const e = lista.find(x=>x.id===mSel);
+  const g = plProgress(e), pct = Math.round(g.done/g.total*100), nx = plNext(e);
+  const dis = canWrite?"":"disabled";
+  const ini = e.inicioTeste||"";
+  const fases = PLANO.map(([fk,fn,w0,w1,obj,trava,its],fi)=>{
+    const items = its.map(([ik,t,q])=>({key:fk+"."+ik,t,q}));
+    const p = plProgress(e, items);
+    const ate = ini ? addDays(ini, w1*7-1) : "";
+    const late = ate && ate < today() && p.done<p.total;
+    return `<details class="fase" ${p.done<p.total?"open":""}>
+      <summary><span class="fn mono">Fase ${fi+1}</span><span class="ft">${esc(fn)}</span>
+        <span class="fw">${w0===w1?`Semana ${w0}`:`Semanas ${w0}–${w1}`}${ate?` · até <span class="mono">${fmtDate(ate)}</span>`:""}</span>
+        <span class="pill ${p.done===p.total?"good":late?"bad":""}">${p.done}/${p.total}${late?" · atrasada":""}</span></summary>
+      <p class="why" style="margin-top:6px">${esc(obj)}</p>${trava?`<div class="gate">${esc(trava)}</div>`:""}
+      <div class="plitems">${items.map(it=>{ const s=plStatus(e,it.key); const ag=AG[it.q];
+        return `<div class="pli ${s}"><button type="button" class="pst pill ${PST[s][1]}" data-pl="${it.key}" ${dis} title="Mudar o status">${PST[s][0]}</button>
+          <span class="plt">${esc(it.t)}</span><span class="plq">${quemChip(it.q)}</span>
+          ${ag?`<span class="plb"><button class="btn sm" type="button" data-plcopy="${it.key}">Copiar</button><button class="btn sm primary" type="button" data-plask="${it.key}" ${dis}>Pedir</button></span>`:`<span class="plb"></span>`}</div>`; }).join("")}</div>
+    </details>`;
+  }).join("");
+  box.innerHTML = `
+    <div class="mhead">
+      <div class="d-id">${ava(e,"lg")}<div><h2 style="font-size:22px">${esc(e.nome)}</h2><div class="hd" style="color:var(--muted)">${esc(e.modelo||"")}${e.modelo?" · ":""}etapa ${esc(STAGES[SK[e.etapa]]?.n||"")}</div></div></div>
+      <div class="mctl">
+        <div class="fld"><label for="mSel">Expert</label><select id="mSel">${lista.map(x=>`<option value="${esc(x.id)}" ${x.id===mSel?"selected":""}>${esc(x.nome)}</option>`).join("")}</select></div>
+        <div class="fld"><label for="mInicio">Início do teste</label><input type="date" id="mInicio" value="${esc(ini)}" ${dis}></div>
+      </div>
+    </div>
+    <div class="mtop">
+      <div class="kpi"><div class="lbl">Montagem concluída</div><div class="val mono">${pct}%</div><div class="bar ${pct===100?"done":""}" style="margin-top:6px"><i style="width:${pct}%"></i></div><div class="sub">${g.done} de ${g.total} itens</div></div>
+      <div class="kpi nextbox"><div class="lbl">Próximo passo</div>${nx?`<div class="nt">${esc(nx.t)}</div><div class="sub">${esc(nx.fase)} · ${AG[nx.q]?esc(AG[nx.q][0]):esc(QUEM[nx.q]||"")}</div>`:`<div class="nt">Tudo pronto. Hora de ler os marcos.</div>`}</div>
+    </div>
+    <p class="why" style="margin:14px 0 0">Clique no status para avançar: a fazer → fazendo → feito. As fases seguem a ordem certa: números antes da página, página e checkout antes do tráfego.${ini?"":" Coloque a data de início do teste para ver o prazo de cada fase."}</p>
+    <div class="fases">${fases}</div>`;
+}
+async function montagemClick(t){
+  const e = experts.find(x=>x.id===(t.dataset.plopen||mSel)); if(!e) return;
+  if(t.dataset.plopen){ mSel=e.id; closeDrawer(); setTab("montagem"); renderMontagem(); return; }
+  const key = t.dataset.pl||t.dataset.plcopy||t.dataset.plask; const it = PL_ALL.find(i=>i.key===key); if(!it) return;
+  if(t.dataset.pl){ const cur=plStatus(e,key); const nxt = cur==="afazer"?"fazendo":cur==="fazendo"?"feito":"afazer";
+    save(e.id,{plano:{...(e.plano||{}),[key]:nxt}}, `Montagem · ${it.t}: ${PST[nxt][0].toLowerCase()}`); return; }
+  const a = AG[it.q]; if(!a) return;
+  const s = {n:`Montagem do negócio · ${it.fase}`};
+  const ag = [a[0], a[1], it.t];
+  if(t.dataset.plcopy){ copy(promptFor(e,s,ag)); return; }
+  if(!db) return;
+  try{ await db.collection("pedidos").add({expertId:e.id, expertNome:e.nome, etapa:e.etapa, plano:key, agente:a[0], skill:a[1], tarefa:`${it.fase}: ${it.t}`, prompt:promptFor(e,s,ag), status:"afazer", criadoEm:new Date().toISOString()});
+    const patch = plStatus(e,key)==="afazer" ? {plano:{...(e.plano||{}),[key]:"fazendo"}} : {};
+    await save(e.id, patch, `Pedido para ${a[0]}: ${it.t}`); toast(`Pedido enviado para ${a[0]}`);
+  }catch{ toast("Não enviou o pedido. Tente de novo."); }
+}
+
 function setTab(k){
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===k)));
-  ["funil","fila","metodo"].forEach(x=>$("#p-"+x).hidden = x!==k);
+  ["funil","montagem","fila","metodo"].forEach(x=>$("#p-"+x).hidden = x!==k);
   try{ localStorage.setItem("dngrow-tab",k); }catch{}
 }
 
-function renderAll(){ renderKpis(); renderBoard(); renderQueue(); if(openId) renderDrawer(); }
+function renderAll(){ renderKpis(); renderBoard(); renderQueue(); renderMontagem(); if(openId) renderDrawer(); }
 
 /* ---------- boot ---------- */
 renderMethod(); renderKpis(); renderBoard(); renderQueue();
