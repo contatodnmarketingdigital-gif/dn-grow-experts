@@ -1,0 +1,333 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><meta charset="utf-8">
+<title>DN Grow Projetos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: abas por projeto no topo; visão geral = uma tabela de produtos por projeto (mês atual);
+   aba do projeto = abinhas por produto, cada uma com o mês e o diário dos últimos 15 dias */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#eef0f4; --ink:#151a24; --mut:#5d6575; --line:#e1e4ea; --grid:#eceef2;
+  --accent:#3550c4; --accent-soft:#e8ecfb;
+  --ok:#1f7a4d; --ok-soft:#e3f3ea; --warn:#9a6200; --warn-soft:#fbf0dc; --crit:#b3261e; --crit-soft:#fbe6e4;
+  --f-display:"Familjen Grotesk","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10131a; --surface:#181c25; --surface-2:#20253a; --ink:#e8ebf2; --mut:#9aa2b3; --line:#2a303d; --grid:#242a37;
+  --accent:#8fa4ff; --accent-soft:#232b48;
+  --ok:#5fcf95; --ok-soft:#163326; --warn:#f0b54a; --warn-soft:#3a2c12; --crit:#ff8a80; --crit-soft:#3d1a18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10131a; --surface:#181c25; --surface-2:#20253a; --ink:#e8ebf2; --mut:#9aa2b3; --line:#2a303d; --grid:#242a37;
+  --accent:#8fa4ff; --accent-soft:#232b48;
+  --ok:#5fcf95; --ok-soft:#163326; --warn:#f0b54a; --warn-soft:#3a2c12; --crit:#ff8a80; --crit-soft:#3d1a18; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:14px 0}
+.brand{font:700 20px/1.1 var(--f-display);letter-spacing:-.01em;margin:0}
+.stamp{font:12px var(--f-mono);color:var(--mut)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;width:100%;margin-top:6px}
+nav.tabs button{font:600 14px var(--f-body);color:var(--mut);background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+button:focus-visible,a:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+main{padding-block:24px 48px}
+h2{font:700 26px/1.15 var(--f-display);letter-spacing:-.015em;margin:0;text-wrap:balance}
+h3{font:600 13px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
+.lede{color:var(--mut);max-width:72ch;margin:6px 0 0}
+.sec{display:grid;gap:20px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.ph{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:10px}
+.ph h4{font:700 19px var(--f-display);margin:0}
+.ph .tot{font:600 15px var(--f-mono);font-variant-numeric:tabular-nums}
+.ph .tot span{font:12px var(--f-body);color:var(--mut)}
+.ph .go{margin-left:auto;font:600 13px var(--f-body);background:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--accent);cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi{background:var(--surface);padding:12px 14px;min-width:0}
+.kpi .l{font-size:12px;color:var(--mut)}
+.kpi .v{font:600 21px/1.2 var(--f-mono);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font:12px var(--f-mono);color:var(--mut)}
+.kpi.crit .v{color:var(--crit)}
+.pill{display:inline-block;font:600 11px var(--f-body);letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-crit{background:var(--crit-soft);color:var(--crit)} .p-info{background:var(--accent-soft);color:var(--accent)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mut);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px}
+td .sub{display:block;color:var(--mut);font-size:12px}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+tr.total td{font-weight:600;border-top:2px solid var(--line)}
+td.vazio{color:var(--mut)}
+.sub-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.sub-tabs button{font:600 13px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.sub-tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.sub-tabs button span{font:12px var(--f-mono);opacity:.75;margin-left:6px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.chart .ax{fill:var(--mut);font:11px var(--f-mono)}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .bar{fill:var(--accent)}
+.chart .bar.dim{opacity:.35}
+.chart .hit{fill:transparent;cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:12px/1.45 var(--f-body);padding:8px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px}
+.tip b{font-family:var(--f-mono)}
+.note{font-size:13px;color:var(--mut);margin:10px 0 0}
+.estr{counter-reset:p;display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.estr li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px}
+.estr li::before{content:counter(p);font:700 15px var(--f-mono);color:var(--accent);background:var(--accent-soft);border-radius:6px;height:26px;display:grid;place-items:center}
+.estr b{font-weight:600}
+.semleitura{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--mut);font-size:14px}
+a{color:var(--accent)}
+.mono{font-family:var(--f-mono);font-size:13px}
+section[hidden]{display:none}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="brand">DN Grow · Projetos</p>
+    <span class="stamp" id="stamp"></span><a href="./" style="font:600 13px system-ui,sans-serif;color:#3550c4;text-decoration:none;border:1px solid #d6dbe8;border-radius:8px;padding:6px 12px;background:#fff">← Funil de experts</a>
+    <nav class="tabs" role="tablist" aria-label="Projetos">
+      <button role="tab" id="t-geral" aria-controls="geral" aria-selected="true">Visão geral</button>
+      <button role="tab" id="t-brainpro" aria-controls="brainpro" aria-selected="false">Brain Pro</button>
+      <button role="tab" id="t-jessica" aria-controls="jessica" aria-selected="false">Jéssica</button>
+      <button role="tab" id="t-metrik" aria-controls="metrik" aria-selected="false">Metrik</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ VISÃO GERAL ============ -->
+<section class="sec" id="geral" role="tabpanel" aria-labelledby="t-geral">
+  <div>
+    <h2>Investimento e CPA por produto</h2>
+    <p class="lede" id="geralLede"></p>
+  </div>
+  <div id="geralProjetos" class="sec"></div>
+</section>
+
+<!-- ============ BRAIN PRO ============ -->
+<section class="sec" id="brainpro" role="tabpanel" aria-labelledby="t-brainpro" hidden>
+  <div>
+    <h2>Brain Pro · Alexandre Barbosa</h2>
+    <p class="lede">Sócio da DN há 2 anos. Escolha o produto para ver o mês e o diário dos últimos 15 dias.</p>
+  </div>
+  <div class="sub-tabs" id="brainproTabs" role="group" aria-label="Produtos da Brain Pro"></div>
+  <div id="brainproProduto" class="sec"></div>
+  <div class="box">
+    <h3>Estratégia</h3>
+    <ol class="estr">
+      <li><div><b>Black: o lead já está comprado.</b> O resultado depende da conversão do grupo (1,4% a 1,5% para ROI 3) e do comercial a partir de 28/10, não de verba nova.</div></li>
+      <li><div><b>Pagar a Conta 02-TEA.</b> Ela está em carência e roda toda a captação da Black.</div></li>
+      <li><div><b>Manter o Vagal e cortar o tDCS.</b> Vagal vende pela página; o tDCS gastou R$ 3,4 mil no mês com uma venda e sem faturamento no pixel.</div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ JÉSSICA ============ -->
+<section class="sec" id="jessica" role="tabpanel" aria-labelledby="t-jessica" hidden>
+  <div>
+    <h2>Jéssica Cristianni · Secar sem Disciplina</h2>
+    <p class="lede">Parceria 60/40 com piloto de 90 dias. Black meteórica: captação até 01/11, lives de 02 a 05/11 e carrinho de 05 a 08/11.</p>
+  </div>
+  <div class="box"><div class="semleitura"><span class="pill p-crit">sem leitura</span>Investimento, CPL e CPA por produto aparecem aqui quando a conta de anúncios dela for conectada.</div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Instagram</div><div class="v">917 mil</div><div class="s">1.720 posts</div></div>
+    <div class="kpi"><div class="l">Alunas ativas</div><div class="v">631</div><div class="s">~90% renovam</div></div>
+    <div class="kpi"><div class="l">Faturamento hoje</div><div class="v">~R$ 25 mil</div><div class="s">por mês</div></div>
+    <div class="kpi"><div class="l">Meta</div><div class="v">R$ 100 mil</div><div class="s">por mês</div></div>
+  </div>
+  <div class="box">
+    <h3>Produtos</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Produto</th><th class="n">Preço</th><th>Na Black</th></tr></thead>
+      <tbody>
+        <tr><td>SSD anual (13 meses na Black)</td><td class="n">R$ 397</td><td>oferta principal</td></tr>
+        <tr><td>SSD semestral</td><td class="n">R$ 297</td><td>oferta</td></tr>
+        <tr><td>SSD mensal</td><td class="n">R$ 97</td><td>—</td></tr>
+        <tr><td>Desafio 4 Semanas</td><td class="n">R$ 97</td><td>downsell depois de 09/11</td></tr>
+        <tr><td>Consultoria 90 dias</td><td class="n">R$ 300 a 480</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="box">
+    <h3>Estratégia</h3>
+    <ol class="estr">
+      <li><div><b>O gargalo da Black é acesso, não copy nem criativo.</b> Sem o link do grupo e a conta de anúncios, a captação de 13 dias perde um dia por dia parado.</div></li>
+      <li><div><b>Para as 631 alunas, upgrade para o anual.</b> Não dar desconto para quem já ia renovar.</div></li>
+      <li><div><b>Fechar no papel antes do carrinho:</b> quem recebe, split 60/40 e verba.</div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ METRIK ============ -->
+<section class="sec" id="metrik" role="tabpanel" aria-labelledby="t-metrik" hidden>
+  <div>
+    <h2>Metrik · Owen e Oséias</h2>
+    <p class="lede">Venda direta, sem comercial: anúncio, página, checkout e compra. Números do relatório exportado do Gerenciador; o diário entra quando o token for liberado.</p>
+  </div>
+  <div class="sub-tabs" id="metrikTabs" role="group" aria-label="Produtos da Metrik"></div>
+  <div id="metrikProduto" class="sec"></div>
+  <div class="box">
+    <h3>Estratégia</h3>
+    <ol class="estr">
+      <li><div><b>O Rastreio Próprio é o motor do mês.</b> 26 vendas com CPA de R$ 95 nas campanhas de venda e ticket médio de R$ 183. A RP Validação (CPA R$ 84, ROAS 2,4) é a campanha para escalar.</div></li>
+      <li><div><b>Kommo Academy parado com CPA de R$ 238,</b> 19% acima da meta de R$ 200, mas com ROAS 3,1 e só 3 vendas. Amostra pequena: revisar a meta antes de religar ou descartar.</div></li>
+      <li><div><b>O pixel voltou a registrar compra</b> (29 no mês), então o número de venda agora é confiável. A Comunidade v3 começou em 21/10 e ainda não tem leitura.</div></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<script>
+/*DADOS*/const DADOS = {"geradoEm": "22/10/2026 19:50", "projetos": [{"id": "brainpro", "nome": "Brain Pro", "status": "ok", "periodo_mes": ["2026-10-01", "2026-10-21"], "periodo_dias": ["2026-10-07", "2026-10-21"], "produtos": [{"id": "pos-black", "nome": "Pós · Black", "resultado": "lead", "ticket": 4500, "status": "ativo", "mes": {"sp": 36810.02, "lead": 6312.0, "buy": 8.0, "rec": 5262.42}, "dias": [{"dia": "2026-10-07", "sp": 104.41, "lead": 16.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-08", "sp": 132.27, "lead": 26.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-09", "sp": 146.93, "lead": 24.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-10", "sp": 372.37, "lead": 118.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-11", "sp": 439.55, "lead": 103.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-12", "sp": 478.40000000000003, "lead": 101.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-13", "sp": 1285.29, "lead": 160.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-14", "sp": 2312.48, "lead": 307.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-15", "sp": 2211.15, "lead": 345.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-16", "sp": 3202.04, "lead": 514.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-17", "sp": 4726.66, "lead": 896.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-18", "sp": 8675.22, "lead": 1645.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-19", "sp": 4560.280000000001, "lead": 754.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-20", "sp": 4378.97, "lead": 708.0, "buy": 2.0, "rec": 5262.42}, {"dia": "2026-10-21", "sp": 3784.0, "lead": 595.0, "buy": 2.0, "rec": 0.0}], "campanhas": [{"nome": "👑 [QUENTE] [BLACK] [PÓS] [LEAD] [CBO] [PRINCIPAL]", "conta": "Conta 02-TEA", "sp": 17632.960000000003, "lead": 2531.0, "buy": 4.0, "rec": 0.0}, {"nome": "👑 [FRIO] [BLACK] [PÓS] [LEAD] [CBO] [ABERTO] [PRINCIPAL]", "conta": "Conta 02-TEA", "sp": 14145.960000000001, "lead": 3175.0, "buy": 0.0, "rec": 0.0}, {"nome": "[BLACK] [PÓS] [LEAD] [CBO] [06/10/26]", "conta": "Conta 02-TEA", "sp": 1737.1800000000003, "lead": 202.0, "buy": 1.0, "rec": 0.0}, {"nome": "03 [BLACK] [PÓS] [LEAD] [CBO] [FRIO] [13/10/26]", "conta": "Conta 02-TEA", "sp": 1409.96, "lead": 243.0, "buy": 0.0, "rec": 0.0}, {"nome": "07 [PÓS-GRADUAÇÃO][BLACK][VENDAS][CBO][16/10/26]", "conta": "Cursos Alexandre", "sp": 1096.52, "lead": 90.0, "buy": 3.0, "rec": 5262.42}, {"nome": "04 [BLACK] [PÓS] [LEAD] [CBO] [13/10/26]", "conta": "Conta 02-TEA", "sp": 787.44, "lead": 71.0, "buy": 0.0, "rec": 0.0}]}, {"id": "vagal", "nome": "Vagal", "resultado": "venda", "ticket": 697, "status": "ativo", "mes": {"sp": 9240.419999999998, "lead": 23.0, "buy": 29.0, "rec": 18122.0}, "dias": [{"dia": "2026-10-07", "sp": 394.85, "lead": 3.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-08", "sp": 422.03, "lead": 0.0, "buy": 1.0, "rec": 697.0}, {"dia": "2026-10-09", "sp": 349.44, "lead": 1.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-10", "sp": 359.44, "lead": 0.0, "buy": 2.0, "rec": 1394.0}, {"dia": "2026-10-11", "sp": 393.35, "lead": 0.0, "buy": 2.0, "rec": 1394.0}, {"dia": "2026-10-12", "sp": 396.02, "lead": 1.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-13", "sp": 263.89, "lead": 1.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-14", "sp": 270.48, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-15", "sp": 310.53, "lead": 1.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-16", "sp": 462.03999999999996, "lead": 2.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-17", "sp": 590.0699999999999, "lead": 0.0, "buy": 5.0, "rec": 3485.0}, {"dia": "2026-10-18", "sp": 686.98, "lead": 0.0, "buy": 3.0, "rec": 2091.0}, {"dia": "2026-10-19", "sp": 701.3500000000001, "lead": 1.0, "buy": 2.0, "rec": 1394.0}, {"dia": "2026-10-20", "sp": 657.47, "lead": 0.0, "buy": 1.0, "rec": 697.0}, {"dia": "2026-10-21", "sp": 566.2700000000001, "lead": 0.0, "buy": 1.0, "rec": 697.0}], "campanhas": [{"nome": "[VAGAL][VENDAS][CBO][PÁGINA NOVA][23/09/26]", "conta": "Conta 02-TEA", "sp": 4881.4, "lead": 9.0, "buy": 21.0, "rec": 12546.0}, {"nome": "[VAGAL][BLACK][VENDAS][CBO][ABERTO][16/10/26]", "conta": "Cursos Alexandre", "sp": 1188.56, "lead": 1.0, "buy": 5.0, "rec": 3485.0}, {"nome": "[VAGAL][WHATS RAFA][CBO][PÁGINA NOVA][30/09/26]", "conta": "Conta 02-TEA", "sp": 790.07, "lead": 11.0, "buy": 0.0, "rec": 0.0}, {"nome": "[VAGAL][VENDAS][CBO][TESTE PÁGINA][FORMACAOVAGAL][MELHORES][16/10/26]", "conta": "Conta 02-TEA", "sp": 615.13, "lead": 0.0, "buy": 2.0, "rec": 1394.0}, {"nome": "[VAGAL][VENDAS][CBO][TESTE BOTÃO][09/10/26]", "conta": "Conta 02-TEA", "sp": 612.75, "lead": 0.0, "buy": 1.0, "rec": 697.0}, {"nome": "[VAGAL][VENDAS][CBO][PÁGINA NOVA][VARIAÇÕES][07/10/26]", "conta": "Conta 02-TEA", "sp": 383.1, "lead": 1.0, "buy": 0.0, "rec": 0.0}, {"nome": "[VAGAL] [FER] [CAIXINHA 02] [PGNOVA] [WHATS] [CBO] [01/10/26]", "conta": "Conta 02-TEA", "sp": 246.20999999999998, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"nome": "[VAGAL][VENDAS][CBO][ABERTO][PÁGINA NOVA][VARIAÇÕES CAMPEÃO][19/10/26]", "conta": "Conta 02-TEA", "sp": 234.06, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"nome": "02- [VAGAL][VENDAS][CBO][PÁGINA NOVA][30/09/26]", "conta": "Conta 02-TEA", "sp": 184.95999999999998, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"nome": "[VAGAL][WHATS FER][CBO][PÁGINA NOVA][07/10/26]", "conta": "Conta 02-TEA", "sp": 104.18, "lead": 1.0, "buy": 0.0, "rec": 0.0}]}, {"id": "tdcs", "nome": "tDCS", "resultado": "lead", "ticket": null, "status": "pausado (todas as campanhas de tDCS pausadas em 15/10)", "mes": {"sp": 3395.54, "lead": 38.0, "buy": 1.0, "rec": 0.0}, "dias": [{"dia": "2026-10-07", "sp": 296.73, "lead": 2.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-08", "sp": 268.27, "lead": 1.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-09", "sp": 181.14000000000001, "lead": 2.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-10", "sp": 201.7, "lead": 4.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-11", "sp": 260.05, "lead": 4.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-12", "sp": 214.7, "lead": 3.0, "buy": 1.0, "rec": 0.0}, {"dia": "2026-10-13", "sp": 162.31, "lead": 2.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-14", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-15", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-16", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-17", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-18", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-19", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-20", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-21", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}], "campanhas": [{"nome": "[tDCS][RIO][14/09/26]", "conta": "Cursos Alexandre", "sp": 2817.33, "lead": 37.0, "buy": 1.0, "rec": 0.0}, {"nome": "[tDCS][FER][CBO][01/10/26]", "conta": "Cursos Alexandre", "sp": 436.98999999999995, "lead": 1.0, "buy": 0.0, "rec": 0.0}, {"nome": "[tDCS][FER][07/10/26]", "conta": "Cursos Alexandre", "sp": 141.22, "lead": 0.0, "buy": 0.0, "rec": 0.0}]}, {"id": "grupo-estudo", "nome": "Grupo de Estudo", "resultado": "lead", "ticket": 0, "status": "ativo", "mes": {"sp": 909.5699999999999, "lead": 323.0, "buy": 0.0, "rec": 0.0}, "dias": [{"dia": "2026-10-07", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-08", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-09", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-10", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-11", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-12", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-13", "sp": 41.73, "lead": 6.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-14", "sp": 85.1, "lead": 24.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-15", "sp": 71.05, "lead": 24.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-16", "sp": 63.98, "lead": 20.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-17", "sp": 83.62, "lead": 28.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-18", "sp": 61.99, "lead": 26.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-19", "sp": 43.9, "lead": 18.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-20", "sp": 51.57, "lead": 22.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-21", "sp": 52.78, "lead": 30.0, "buy": 0.0, "rec": 0.0}], "campanhas": [{"nome": "02 - [GRUPO DE ESTUDO][LEAD][WHATS][27/09/2026]", "conta": "Conta 02-TEA", "sp": 766.1600000000001, "lead": 274.0, "buy": 0.0, "rec": 0.0}, {"nome": "02 - [SONO] [GRUPO DE ESTUDO][LEAD][WHATS][27/09/2026]", "conta": "Conta 02-TEA", "sp": 143.41, "lead": 49.0, "buy": 0.0, "rec": 0.0}]}, {"id": "outros", "nome": "Outros", "resultado": "lead", "ticket": null, "status": "", "mes": {"sp": 195.95, "lead": 0.0, "buy": 0.0, "rec": 0.0}, "dias": [{"dia": "2026-10-07", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-08", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-09", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-10", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-11", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-12", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-13", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-14", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-15", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-16", "sp": 63.57, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-17", "sp": 80.6, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-18", "sp": 49.16, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-19", "sp": 2.62, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-20", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}, {"dia": "2026-10-21", "sp": 0.0, "lead": 0.0, "buy": 0.0, "rec": 0.0}], "campanhas": [{"nome": "[WORKSHOP-NÃO INVASIVA][VENDAS][CBO][ABERTO][16/10/26]", "conta": "Cursos Alexandre", "sp": 195.95, "lead": 0.0, "buy": 0.0, "rec": 0.0}]}]}, {"id": "jessica", "nome": "Jéssica", "status": "sem_acesso", "motivo": "conta de anúncios não conectada", "produtos": []}, {"id": "metrik", "nome": "Metrik", "status": "ok", "fonte": "relatório exportado do Gerenciador (2026-10-01_a_2026-10-22_campanhas.csv)", "periodo_mes": ["2026-10-01", "2026-10-22"], "periodo_dias": null, "produtos": [{"id": "rastreio", "nome": "Rastreio Próprio", "resultado": "venda", "rotulo_res": "leads", "mes": {"sp": 2757.78, "lead": 816.0, "buy": 26.0, "rec": 4749.48}, "dias": [], "campanhas": [{"nome": "RP | VALIDAÇÃO | CBO | 2026-10-13", "conta": "Metrik", "sp": 1671.62, "lead": 0.0, "buy": 20.0, "rec": 4019.77, "status": "ativa"}, {"nome": "RASTREIO PRÓPRIO | ABO | VENDAS | 2026-10-08", "conta": "Metrik", "sp": 808.45, "lead": 0.0, "buy": 6.0, "rec": 729.71, "status": "inativa"}, {"nome": "RASTREIO PRÓPRIO | ABO | VISITA PERFIL | 2026-10-08", "conta": "Metrik", "sp": 269.06, "lead": 786.0, "buy": 0.0, "rec": 0.0, "status": "ativa"}, {"nome": "RP | TOPO | VISITA PERFIL | ABERTO + LAL | 2026-10-13", "conta": "Metrik", "sp": 8.65, "lead": 30.0, "buy": 0.0, "rec": 0.0, "status": "inativa"}]}, {"id": "kommo", "nome": "Kommo Academy", "resultado": "venda", "rotulo_res": "leads", "mes": {"sp": 713.09, "lead": 0.0, "buy": 3.0, "rec": 2241.0}, "dias": [], "campanhas": [{"nome": "CURSO | Kommo Academy 997 | Vendas | 2026-08", "conta": "Metrik", "sp": 713.09, "lead": 0.0, "buy": 3.0, "rec": 2241.0, "status": "inativa"}]}, {"id": "topo", "nome": "Topo · seguidores", "resultado": "perfil", "rotulo_res": "visitas ao perfil", "mes": {"sp": 154.68, "lead": 513.0, "buy": 0.0, "rec": 0.0}, "dias": [], "campanhas": [{"nome": "TOPO | Seguidores | Tráfego | 2026-08", "conta": "Metrik", "sp": 154.68, "lead": 513.0, "buy": 0.0, "rec": 0.0, "status": "ativa"}]}, {"id": "comunidade", "nome": "Comunidade v3", "resultado": "venda", "rotulo_res": "leads", "mes": {"sp": 42.77, "lead": 0.0, "buy": 0.0, "rec": 0.0}, "dias": [], "campanhas": [{"nome": "COMUNIDADE V3 | CBO | VENDAS | FUNIL | 2026-10-21", "conta": "Metrik", "sp": 42.77, "lead": 0.0, "buy": 0.0, "rec": 0.0, "status": "ativa"}]}]}]};/*FIM-DADOS*/
+
+// Notas fixas por produto (dados que não vêm do pixel).
+const NOTAS = {
+  "pos-black": "Pessoas reais nos grupos vindas do anúncio: 1.625, CPL real de R$ 21,98 (SendFlow, 22/10). O lead do pixel é mais barato porque só 1 em cada 4 entra no grupo. A venda abre em 28/10; as vendas de agora vêm da campanha 07 de vendas da pós.",
+  "vagal": "Venda direta pela página. Faturamento do pixel; venda do comercial não entra toda nele.",
+  "tdcs": "Campanhas de tDCS pausadas em 15/10.",
+  "grupo-estudo": "Gratuito: o CPL depende de quanto do grupo vira venda depois.",
+  "outros": "Workshop de R$ 9,90, pausado sem venda.",
+  "rastreio": "Inclui as campanhas de visita ao perfil do Rastreio Próprio (816 visitas). O CPA das campanhas de venda, sem elas, fica em R$ 95.",
+  "kommo": "Campanha inativa hoje. Meta de CPA: R$ 200 sobre o ticket de R$ 997.",
+  "comunidade": "Começou em 21/10. Meta de CPA perto de R$ 140 (ticket R$ 697), a confirmar.",
+  "topo": "Campanha de seguidores: o resultado é visita ao perfil, não venda."
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl = (v, d=0) => v==null||!isFinite(v) ? "—" : "R$ " + v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const num = v => (v||0).toLocaleString("pt-BR",{maximumFractionDigits:0});
+const div = (a,b) => b ? a/b : null;
+const dm = iso => iso.slice(8,10)+"/"+iso.slice(5,7);
+const met = s => ({sp:s.sp, lead:s.lead, buy:s.buy, rec:s.rec, cpl:div(s.sp,s.lead), cpa:div(s.sp,s.buy), roas:div(s.rec,s.sp)});
+
+function linhaProduto(p, proj){
+  const m = met(p.mes), venda = p.resultado==="venda", perfil = p.resultado==="perfil";
+  // CPA e ROAS só fazem sentido em produto de venda; em captação o número que importa é o CPL
+  // (em campanha de seguidores, o "lead" é a visita ao perfil).
+  return `<tr class="click" tabindex="0" data-proj="${proj}" data-prod="${esc(p.id)}">
+    <td>${esc(p.nome)}<span class="sub">${venda?"venda direta":perfil?"visitas ao perfil":"captação de lead"}</span></td>
+    <td class="n">${brl(m.sp)}</td><td class="n">${venda?"—":num(m.lead)}</td><td class="n">${venda?"—":brl(m.cpl,2)}</td>
+    <td class="n">${num(m.buy)}</td><td class="n">${venda?brl(m.cpa,2):"—"}</td><td class="n">${brl(m.rec)}</td><td class="n">${venda&&m.roas?m.roas.toLocaleString("pt-BR",{maximumFractionDigits:2}):"—"}</td></tr>`;
+}
+
+function renderGeral(){
+  $("#stamp").textContent = `mês atual · gerado em ${DADOS.geradoEm}`;
+  const sem = DADOS.projetos.filter(p=>p.status!=="ok").length;
+  $("#geralLede").textContent = `Cada projeto com seus produtos, no mês atual. Clique num produto para ver o detalhe e o diário dos últimos 15 dias.${sem?` ${sem} projeto(s) ainda sem conta de anúncios lida.`:""}`;
+  $("#geralProjetos").innerHTML = DADOS.projetos.map(pj=>{
+    if(pj.status!=="ok") return `<div class="box"><div class="ph"><h4>${esc(pj.nome)}</h4><span class="pill p-crit">sem leitura</span><button class="go" data-tab="${pj.id}">Abrir</button></div>
+      <div class="semleitura">Sem números de tráfego: ${esc(pj.motivo)}.</div></div>`;
+    const t = pj.produtos.reduce((a,p)=>{["sp","lead","buy","rec"].forEach(k=>a[k]+=p.mes[k]); return a;},{sp:0,lead:0,buy:0,rec:0});
+    return `<div class="box"><div class="ph"><h4>${esc(pj.nome)}</h4><span class="tot">${brl(t.sp)} <span>investidos de ${dm(pj.periodo_mes[0])} a ${dm(pj.periodo_mes[1])}</span></span>${pj.fonte?`<span class="pill p-info">relatório exportado</span>`:""}<button class="go" data-tab="${pj.id}">Abrir</button></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Produto</th><th class="n">Investido</th><th class="n">Leads / visitas</th><th class="n">CPL</th><th class="n">Vendas</th><th class="n">CPA</th><th class="n">Faturamento</th><th class="n">ROAS</th></tr></thead>
+        <tbody>${pj.produtos.map(p=>linhaProduto(p,pj.id)).join("")}
+          <tr class="total"><td>Total</td><td class="n">${brl(t.sp)}</td><td class="n"></td><td class="n"></td><td class="n">${num(t.buy)}</td><td class="n"></td><td class="n">${brl(t.rec)}</td><td class="n"></td></tr>
+        </tbody></table></div>
+      <p class="note">Vendas e faturamento são do pixel. Em produto de venda, CPA = investido ÷ vendas; em captação de lead, o custo é o CPL.</p></div>`;
+  }).join("");
+}
+
+const prodSel = {};
+function renderProj(id){
+  const pj = DADOS.projetos.find(p=>p.id===id), tabsEl = $(`#${id}Tabs`), out = $(`#${id}Produto`);
+  if(!pj || pj.status!=="ok" || !tabsEl) return;
+  if(!pj.produtos.find(p=>p.id===prodSel[id])) prodSel[id] = pj.produtos[0]?.id;
+  tabsEl.innerHTML = pj.produtos.map(p=>`<button type="button" data-proj="${id}" data-prod="${esc(p.id)}" aria-pressed="${p.id===prodSel[id]}">${esc(p.nome)}<span>${brl(p.mes.sp)}</span></button>`).join("");
+  const p = pj.produtos.find(x=>x.id===prodSel[id]); if(!p) return;
+  const m = met(p.mes), ehVenda = p.resultado==="venda", rot = p.rotulo_res || "leads";
+  const temDias = (p.dias||[]).length > 0;
+  const n15 = met((p.dias||[]).reduce((a,d)=>{["sp","lead","buy","rec"].forEach(k=>a[k]+=d[k]); return a;},{sp:0,lead:0,buy:0,rec:0}));
+  out.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="l">Investido no mês</div><div class="v">${brl(m.sp)}</div><div class="s">${dm(pj.periodo_mes[0])} a ${dm(pj.periodo_mes[1])}</div></div>
+      ${ehVenda?"":`<div class="kpi"><div class="l">${rot[0].toUpperCase()+rot.slice(1)}</div><div class="v">${num(m.lead)}</div><div class="s">custo ${brl(m.cpl,2)}</div></div>`}
+      <div class="kpi"><div class="l">Vendas no pixel</div><div class="v">${num(m.buy)}</div><div class="s">${ehVenda?`CPA ${brl(m.cpa,2)}`:"sem venda direta: veja o custo"}</div></div>
+      <div class="kpi"><div class="l">Faturamento no pixel</div><div class="v">${brl(m.rec)}</div><div class="s">ROAS ${m.roas?m.roas.toLocaleString("pt-BR",{maximumFractionDigits:2}):"—"}</div></div>
+      ${temDias?`<div class="kpi"><div class="l">Últimos 15 dias</div><div class="v">${brl(n15.sp)}</div><div class="s">${ehVenda?`${num(n15.buy)} vendas · CPA ${brl(n15.cpa,0)}`:`${num(n15.lead)} ${rot} · ${brl(n15.cpl,2)}`}</div></div>`:""}
+    </div>
+    ${NOTAS[p.id]?`<p class="note" style="margin:0">${esc(NOTAS[p.id])}</p>`:""}
+    ${temDias?diarioHtml(pj,p,ehVenda):`<div class="box"><div class="semleitura"><span class="pill p-warn">sem diário</span>O relatório exportado veio só com o total do mês. O diário dos últimos 15 dias aparece quando o token da conta for liberado.</div></div>`}
+    <div class="box">
+      <h3>Campanhas do produto no mês</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Campanha</th><th class="n">Investido</th><th class="n">${ehVenda?"Leads / visitas":rot[0].toUpperCase()+rot.slice(1)}</th><th class="n">Custo</th><th class="n">Vendas</th><th class="n">CPA</th><th class="n">ROAS</th></tr></thead>
+        <tbody>${p.campanhas.map(c=>{const x=met(c); return `<tr><td>${esc(c.nome)}<span class="sub">${esc([c.conta,c.status].filter(Boolean).join(" · "))}</span></td><td class="n">${brl(x.sp)}</td><td class="n">${num(x.lead)}</td><td class="n">${brl(x.cpl,2)}</td><td class="n">${num(x.buy)}</td><td class="n">${brl(x.cpa,0)}</td><td class="n">${x.roas?x.roas.toLocaleString("pt-BR",{maximumFractionDigits:2}):"—"}</td></tr>`;}).join("")}</tbody>
+      </table></div>
+    </div>`;
+  if(temDias) desenharBarras(out.querySelector(".chart"), p.dias, ehVenda);
+}
+function diarioHtml(pj, p, ehVenda){
+  return `
+    <div class="box">
+      <h3>Investido por dia · ${dm(pj.periodo_dias[0])} a ${dm(pj.periodo_dias[1])}</h3>
+      <div class="chart"></div>
+    </div>
+    <div class="box">
+      <h3>Diário · últimos 15 dias</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Dia</th><th class="n">Investido</th><th class="n">Leads</th><th class="n">CPL</th><th class="n">Vendas</th><th class="n">CPA</th><th class="n">Faturamento</th><th class="n">ROAS</th></tr></thead>
+        <tbody>${p.dias.slice().reverse().map(d=>{const x=met(d); const vazio=!d.sp;
+          return `<tr><td class="${vazio?"vazio":""}">${dm(d.dia)}</td>${vazio?`<td class="n vazio" colspan="7">sem gasto</td>`:
+          `<td class="n">${brl(x.sp)}</td><td class="n">${num(x.lead)}</td><td class="n">${brl(x.cpl,2)}</td><td class="n">${num(x.buy)}</td><td class="n">${brl(x.cpa,0)}</td><td class="n">${brl(x.rec)}</td><td class="n">${x.roas?x.roas.toLocaleString("pt-BR",{maximumFractionDigits:2}):"—"}</td>`}</tr>`;}).join("")}
+        </tbody></table></div>
+    </div>`;
+}
+
+// Barras do investido diário, com a dica de leads/vendas ao passar o mouse.
+function desenharBarras(el, dias, ehVenda){
+  const W=640, H=200, L=56, R=8, T=12, B=26, max = Math.max(...dias.map(d=>d.sp), 1);
+  const passo = [100,200,500,1000,2000,5000,10000].find(s=>max/s<=4) || 20000;
+  const topo = Math.ceil(max/passo)*passo, y = v => T + (H-T-B)*(1-v/topo);
+  const bw = (W-L-R)/dias.length, gap = 4;
+  let g = "";
+  for(let v=0; v<=topo; v+=passo){ g += `<line class="gl" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L-6}" y="${y(v)+4}" text-anchor="end">${v>=1000?(v/1000).toLocaleString("pt-BR")+" mil":v}</text>`; }
+  dias.forEach((d,i)=>{
+    const x = L + i*bw + gap/2, w = bw-gap, h = y(0)-y(d.sp), r = Math.min(4, w/2, h);
+    if(d.sp>0) g += `<path class="bar" data-i="${i}" d="M${x},${y(0)} V${y(d.sp)+r} Q${x},${y(d.sp)} ${x+r},${y(d.sp)} H${x+w-r} Q${x+w},${y(d.sp)} ${x+w},${y(d.sp)+r} V${y(0)} Z"/>`;
+    if(i%2===0 || i===dias.length-1) g += `<text class="ax" x="${x+w/2}" y="${H-8}" text-anchor="middle">${dm(d.dia)}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${L+i*bw}" y="${T}" width="${bw}" height="${H-T-B}"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Investido por dia nos últimos 15 dias">${g}</svg><div class="tip" hidden></div>`;
+  const tip = el.querySelector(".tip"), svg = el.querySelector("svg");
+  const mostrar = i => { const d = dias[i], x = met(d), r = svg.getBoundingClientRect(), er = el.getBoundingClientRect();
+    el.querySelectorAll(".bar").forEach(b=>b.classList.toggle("dim", +b.dataset.i!==i));
+    tip.innerHTML = `<b>${dm(d.dia)}</b> · ${brl(x.sp)}<br>${ehVenda?`${num(x.buy)} vendas · CPA ${brl(x.cpa,0)}`:`${num(x.lead)} leads · CPL ${brl(x.cpl,2)}`}`;
+    const px = (L + (i+.5)*bw) / W * r.width + (r.left-er.left), py = y(d.sp) / H * r.height + (r.top-er.top);
+    tip.style.left = Math.min(Math.max(px, 70), er.width-70)+"px"; tip.style.top = py+"px"; tip.hidden = false; };
+  const esconder = () => { tip.hidden = true; el.querySelectorAll(".bar").forEach(b=>b.classList.remove("dim")); };
+  el.querySelectorAll(".hit").forEach(h=>{ h.addEventListener("mouseenter",()=>mostrar(+h.dataset.i)); h.addEventListener("click",()=>mostrar(+h.dataset.i)); });
+  svg.addEventListener("mouseleave", esconder);
+}
+
+// Abas
+const tabs=[...document.querySelectorAll('nav.tabs button')];
+function show(id){
+  tabs.forEach(b=>{const on=b.getAttribute('aria-controls')===id; b.setAttribute('aria-selected',on); document.getElementById(b.getAttribute('aria-controls')).hidden=!on;});
+  try{localStorage.setItem('dngrow-aba',id)}catch(e){}
+  window.scrollTo(0,0);
+}
+tabs.forEach(b=>b.addEventListener('click',()=>show(b.getAttribute('aria-controls'))));
+document.addEventListener("click", ev=>{
+  const go = ev.target.closest("[data-tab]"); if(go){ show(go.dataset.tab); return; }
+  const row = ev.target.closest("tr[data-prod]"); if(row){ prodSel[row.dataset.proj]=row.dataset.prod; renderProj(row.dataset.proj); show(row.dataset.proj); return; }
+  const b = ev.target.closest(".sub-tabs button"); if(b){ prodSel[b.dataset.proj]=b.dataset.prod; renderProj(b.dataset.proj); }
+});
+document.addEventListener("keydown", ev=>{ if(ev.key==="Enter"){ const row=ev.target.closest?.("tr[data-prod]"); if(row) row.click(); } });
+
+renderGeral(); DADOS.projetos.forEach(p=>renderProj(p.id));
+const ids=tabs.map(b=>b.getAttribute('aria-controls'));
+let first=(location.hash||'').slice(1);
+if(!ids.includes(first)){ try{first=localStorage.getItem('dngrow-aba')}catch(e){first=null} }
+show(ids.includes(first)?first:'geral');
+</script>
+</body></html>
