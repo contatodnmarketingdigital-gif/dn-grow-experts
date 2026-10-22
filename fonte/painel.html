@@ -210,6 +210,7 @@ button{cursor:pointer}
 .banner{margin-top:16px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
 .ro{font-size:12px;color:var(--muted);margin-top:8px}
+#numerosFrame{display:block;width:100%;border:0;margin-top:16px;border-radius:14px;min-height:600px;background:var(--bg)}
 /* tráfego do expert */
 .m.alerta .v{color:var(--bad)}
 .tr-wrap{overflow-x:auto;margin-top:12px}
@@ -249,10 +250,347 @@ button{cursor:pointer}
 
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="funil" aria-selected="true">Funil</button>
+    <button class="tab" role="tab" data-tab="numeros" aria-selected="false">Números por produto</button>
     <button class="tab" role="tab" data-tab="montagem" aria-selected="false">Montagem do negócio</button>
     <button class="tab" role="tab" data-tab="fila" aria-selected="false">Fila dos agentes <span class="count mono" id="qCount">0</span></button>
     <button class="tab" role="tab" data-tab="metodo" aria-selected="false">Como funciona</button>
   </nav>
+
+  <section id="p-numeros" hidden>
+    <!--PROJETOS--><iframe id="numerosFrame" title="Números por projeto e produto" srcdoc="&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;DN Grow Projetos&lt;/title&gt;
+&lt;meta name=&quot;claude:viewport-fit-sides&quot; content=&quot;cover&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap&quot;&gt;
+&lt;style&gt;
+/* Layout: abas por projeto no topo; visão geral = uma tabela de produtos por projeto (mês atual);
+   aba do projeto = abinhas por produto, cada uma com o mês e o diário dos últimos 15 dias */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#eef0f4; --ink:#151a24; --mut:#5d6575; --line:#e1e4ea; --grid:#eceef2;
+  --accent:#3550c4; --accent-soft:#e8ecfb;
+  --ok:#1f7a4d; --ok-soft:#e3f3ea; --warn:#9a6200; --warn-soft:#fbf0dc; --crit:#b3261e; --crit-soft:#fbe6e4;
+  --f-display:&quot;Familjen Grotesk&quot;,&quot;Segoe UI&quot;,system-ui,sans-serif;
+  --f-body:&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,system-ui,sans-serif;
+  --f-mono:&quot;IBM Plex Mono&quot;,ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme=&quot;light&quot;]){
+  --bg:#10131a; --surface:#181c25; --surface-2:#20253a; --ink:#e8ebf2; --mut:#9aa2b3; --line:#2a303d; --grid:#242a37;
+  --accent:#8fa4ff; --accent-soft:#232b48;
+  --ok:#5fcf95; --ok-soft:#163326; --warn:#f0b54a; --warn-soft:#3a2c12; --crit:#ff8a80; --crit-soft:#3d1a18; color-scheme:dark}}
+:root[data-theme=&quot;dark&quot;]{
+  --bg:#10131a; --surface:#181c25; --surface-2:#20253a; --ink:#e8ebf2; --mut:#9aa2b3; --line:#2a303d; --grid:#242a37;
+  --accent:#8fa4ff; --accent-soft:#232b48;
+  --ok:#5fcf95; --ok-soft:#163326; --warn:#f0b54a; --warn-soft:#3a2c12; --crit:#ff8a80; --crit-soft:#3d1a18; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+body::before{content:&quot;&quot;;position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:14px 0}
+.brand{font:700 20px/1.1 var(--f-display);letter-spacing:-.01em;margin:0}
+.stamp{font:12px var(--f-mono);color:var(--mut)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;width:100%;margin-top:6px}
+nav.tabs button{font:600 14px var(--f-body);color:var(--mut);background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected=&quot;true&quot;]{color:var(--ink);border-bottom-color:var(--accent)}
+button:focus-visible,a:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+main{padding-block:24px 48px}
+h2{font:700 26px/1.15 var(--f-display);letter-spacing:-.015em;margin:0;text-wrap:balance}
+h3{font:600 13px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
+.lede{color:var(--mut);max-width:72ch;margin:6px 0 0}
+.sec{display:grid;gap:20px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.ph{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:10px}
+.ph h4{font:700 19px var(--f-display);margin:0}
+.ph .tot{font:600 15px var(--f-mono);font-variant-numeric:tabular-nums}
+.ph .tot span{font:12px var(--f-body);color:var(--mut)}
+.ph .go{margin-left:auto;font:600 13px var(--f-body);background:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--accent);cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi{background:var(--surface);padding:12px 14px;min-width:0}
+.kpi .l{font-size:12px;color:var(--mut)}
+.kpi .v{font:600 21px/1.2 var(--f-mono);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font:12px var(--f-mono);color:var(--mut)}
+.kpi.crit .v{color:var(--crit)}
+.pill{display:inline-block;font:600 11px var(--f-body);letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-crit{background:var(--crit-soft);color:var(--crit)} .p-info{background:var(--accent-soft);color:var(--accent)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mut);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px}
+td .sub{display:block;color:var(--mut);font-size:12px}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+tr.total td{font-weight:600;border-top:2px solid var(--line)}
+td.vazio{color:var(--mut)}
+.sub-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.sub-tabs button{font:600 13px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.sub-tabs button[aria-pressed=&quot;true&quot;]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.sub-tabs button span{font:12px var(--f-mono);opacity:.75;margin-left:6px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.chart .ax{fill:var(--mut);font:11px var(--f-mono)}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .bar{fill:var(--accent)}
+.chart .bar.dim{opacity:.35}
+.chart .hit{fill:transparent;cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:12px/1.45 var(--f-body);padding:8px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px}
+.tip b{font-family:var(--f-mono)}
+.note{font-size:13px;color:var(--mut);margin:10px 0 0}
+.estr{counter-reset:p;display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.estr li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px}
+.estr li::before{content:counter(p);font:700 15px var(--f-mono);color:var(--accent);background:var(--accent-soft);border-radius:6px;height:26px;display:grid;place-items:center}
+.estr b{font-weight:600}
+.semleitura{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--mut);font-size:14px}
+a{color:var(--accent)}
+.mono{font-family:var(--f-mono);font-size:13px}
+section[hidden]{display:none}
+&lt;/style&gt;
+
+&lt;header class=&quot;top&quot;&gt;
+  &lt;div class=&quot;wrap&quot;&gt;
+    &lt;p class=&quot;brand&quot;&gt;DN Grow · Projetos&lt;/p&gt;
+    &lt;span class=&quot;stamp&quot; id=&quot;stamp&quot;&gt;&lt;/span&gt;
+    &lt;nav class=&quot;tabs&quot; role=&quot;tablist&quot; aria-label=&quot;Projetos&quot;&gt;
+      &lt;button role=&quot;tab&quot; id=&quot;t-geral&quot; aria-controls=&quot;geral&quot; aria-selected=&quot;true&quot;&gt;Visão geral&lt;/button&gt;
+      &lt;button role=&quot;tab&quot; id=&quot;t-brainpro&quot; aria-controls=&quot;brainpro&quot; aria-selected=&quot;false&quot;&gt;Brain Pro&lt;/button&gt;
+      &lt;button role=&quot;tab&quot; id=&quot;t-jessica&quot; aria-controls=&quot;jessica&quot; aria-selected=&quot;false&quot;&gt;Jéssica&lt;/button&gt;
+      &lt;button role=&quot;tab&quot; id=&quot;t-metrik&quot; aria-controls=&quot;metrik&quot; aria-selected=&quot;false&quot;&gt;Metrik&lt;/button&gt;
+    &lt;/nav&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main class=&quot;wrap&quot;&gt;
+
+&lt;!-- ============ VISÃO GERAL ============ --&gt;
+&lt;section class=&quot;sec&quot; id=&quot;geral&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;t-geral&quot;&gt;
+  &lt;div&gt;
+    &lt;h2&gt;Investimento e CPA por produto&lt;/h2&gt;
+    &lt;p class=&quot;lede&quot; id=&quot;geralLede&quot;&gt;&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;geralProjetos&quot; class=&quot;sec&quot;&gt;&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- ============ BRAIN PRO ============ --&gt;
+&lt;section class=&quot;sec&quot; id=&quot;brainpro&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;t-brainpro&quot; hidden&gt;
+  &lt;div&gt;
+    &lt;h2&gt;Brain Pro · Alexandre Barbosa&lt;/h2&gt;
+    &lt;p class=&quot;lede&quot;&gt;Sócio da DN há 2 anos. Escolha o produto para ver o mês e o diário dos últimos 15 dias.&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;sub-tabs&quot; id=&quot;brainproTabs&quot; role=&quot;group&quot; aria-label=&quot;Produtos da Brain Pro&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;brainproProduto&quot; class=&quot;sec&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h3&gt;Estratégia&lt;/h3&gt;
+    &lt;ol class=&quot;estr&quot;&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Black: o lead já está comprado.&lt;/b&gt; O resultado depende da conversão do grupo (1,4% a 1,5% para ROI 3) e do comercial a partir de 28/10, não de verba nova.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Pagar a Conta 02-TEA.&lt;/b&gt; Ela está em carência e roda toda a captação da Black.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Manter o Vagal e cortar o tDCS.&lt;/b&gt; Vagal vende pela página; o tDCS gastou R$ 3,4 mil no mês com uma venda e sem faturamento no pixel.&lt;/div&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- ============ JÉSSICA ============ --&gt;
+&lt;section class=&quot;sec&quot; id=&quot;jessica&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;t-jessica&quot; hidden&gt;
+  &lt;div&gt;
+    &lt;h2&gt;Jéssica Cristianni · Secar sem Disciplina&lt;/h2&gt;
+    &lt;p class=&quot;lede&quot;&gt;Parceria 60/40 com piloto de 90 dias. Black meteórica: captação até 01/11, lives de 02 a 05/11 e carrinho de 05 a 08/11.&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;box&quot;&gt;&lt;div class=&quot;semleitura&quot;&gt;&lt;span class=&quot;pill p-crit&quot;&gt;sem leitura&lt;/span&gt;Investimento, CPL e CPA por produto aparecem aqui quando a conta de anúncios dela for conectada.&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;kpis&quot;&gt;
+    &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Instagram&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;917 mil&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;1.720 posts&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Alunas ativas&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;631&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;~90% renovam&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Faturamento hoje&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;~R$ 25 mil&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;por mês&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Meta&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;R$ 100 mil&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;por mês&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h3&gt;Produtos&lt;/h3&gt;
+    &lt;div class=&quot;tbl&quot;&gt;&lt;table&gt;
+      &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Produto&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Preço&lt;/th&gt;&lt;th&gt;Na Black&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;SSD anual (13 meses na Black)&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;R$ 397&lt;/td&gt;&lt;td&gt;oferta principal&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;SSD semestral&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;R$ 297&lt;/td&gt;&lt;td&gt;oferta&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;SSD mensal&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;R$ 97&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Desafio 4 Semanas&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;R$ 97&lt;/td&gt;&lt;td&gt;downsell depois de 09/11&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Consultoria 90 dias&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;R$ 300 a 480&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h3&gt;Estratégia&lt;/h3&gt;
+    &lt;ol class=&quot;estr&quot;&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;O gargalo da Black é acesso, não copy nem criativo.&lt;/b&gt; Sem o link do grupo e a conta de anúncios, a captação de 13 dias perde um dia por dia parado.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Para as 631 alunas, upgrade para o anual.&lt;/b&gt; Não dar desconto para quem já ia renovar.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Fechar no papel antes do carrinho:&lt;/b&gt; quem recebe, split 60/40 e verba.&lt;/div&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- ============ METRIK ============ --&gt;
+&lt;section class=&quot;sec&quot; id=&quot;metrik&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;t-metrik&quot; hidden&gt;
+  &lt;div&gt;
+    &lt;h2&gt;Metrik · Owen e Oséias&lt;/h2&gt;
+    &lt;p class=&quot;lede&quot;&gt;Venda direta, sem comercial: anúncio, página, checkout e compra. Números do relatório exportado do Gerenciador; o diário entra quando o token for liberado.&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;sub-tabs&quot; id=&quot;metrikTabs&quot; role=&quot;group&quot; aria-label=&quot;Produtos da Metrik&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;metrikProduto&quot; class=&quot;sec&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h3&gt;Estratégia&lt;/h3&gt;
+    &lt;ol class=&quot;estr&quot;&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;O Rastreio Próprio é o motor do mês.&lt;/b&gt; 26 vendas com CPA de R$ 95 nas campanhas de venda e ticket médio de R$ 183. A RP Validação (CPA R$ 84, ROAS 2,4) é a campanha para escalar.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;Kommo Academy parado com CPA de R$ 238,&lt;/b&gt; 19% acima da meta de R$ 200, mas com ROAS 3,1 e só 3 vendas. Amostra pequena: revisar a meta antes de religar ou descartar.&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;div&gt;&lt;b&gt;O pixel voltou a registrar compra&lt;/b&gt; (29 no mês), então o número de venda agora é confiável. A Comunidade v3 começou em 21/10 e ainda não tem leitura.&lt;/div&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;/main&gt;
+
+&lt;script&gt;
+/*DADOS*/const DADOS = {&quot;geradoEm&quot;: &quot;22/10/2026 20:16&quot;, &quot;projetos&quot;: [{&quot;id&quot;: &quot;brainpro&quot;, &quot;nome&quot;: &quot;Brain Pro&quot;, &quot;status&quot;: &quot;ok&quot;, &quot;periodo_mes&quot;: [&quot;2026-10-01&quot;, &quot;2026-10-21&quot;], &quot;periodo_dias&quot;: [&quot;2026-10-07&quot;, &quot;2026-10-21&quot;], &quot;produtos&quot;: [{&quot;id&quot;: &quot;pos-black&quot;, &quot;nome&quot;: &quot;Pós · Black&quot;, &quot;resultado&quot;: &quot;lead&quot;, &quot;ticket&quot;: 4500, &quot;status&quot;: &quot;ativo&quot;, &quot;mes&quot;: {&quot;sp&quot;: 36810.02, &quot;lead&quot;: 6312.0, &quot;buy&quot;: 8.0, &quot;rec&quot;: 5262.42}, &quot;dias&quot;: [{&quot;dia&quot;: &quot;2026-10-07&quot;, &quot;sp&quot;: 104.41, &quot;lead&quot;: 16.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-08&quot;, &quot;sp&quot;: 132.27, &quot;lead&quot;: 26.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-09&quot;, &quot;sp&quot;: 146.93, &quot;lead&quot;: 24.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-10&quot;, &quot;sp&quot;: 372.37, &quot;lead&quot;: 118.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-11&quot;, &quot;sp&quot;: 439.55, &quot;lead&quot;: 103.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-12&quot;, &quot;sp&quot;: 478.40000000000003, &quot;lead&quot;: 101.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-13&quot;, &quot;sp&quot;: 1285.29, &quot;lead&quot;: 160.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-14&quot;, &quot;sp&quot;: 2312.48, &quot;lead&quot;: 307.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-15&quot;, &quot;sp&quot;: 2211.15, &quot;lead&quot;: 345.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-16&quot;, &quot;sp&quot;: 3202.04, &quot;lead&quot;: 514.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-17&quot;, &quot;sp&quot;: 4726.66, &quot;lead&quot;: 896.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-18&quot;, &quot;sp&quot;: 8675.22, &quot;lead&quot;: 1645.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-19&quot;, &quot;sp&quot;: 4560.280000000001, &quot;lead&quot;: 754.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-20&quot;, &quot;sp&quot;: 4378.97, &quot;lead&quot;: 708.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 5262.42}, {&quot;dia&quot;: &quot;2026-10-21&quot;, &quot;sp&quot;: 3784.0, &quot;lead&quot;: 595.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 0.0}], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;👑 [QUENTE] [BLACK] [PÓS] [LEAD] [CBO] [PRINCIPAL]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 17632.960000000003, &quot;lead&quot;: 2531.0, &quot;buy&quot;: 4.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;👑 [FRIO] [BLACK] [PÓS] [LEAD] [CBO] [ABERTO] [PRINCIPAL]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 14145.960000000001, &quot;lead&quot;: 3175.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[BLACK] [PÓS] [LEAD] [CBO] [06/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 1737.1800000000003, &quot;lead&quot;: 202.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;03 [BLACK] [PÓS] [LEAD] [CBO] [FRIO] [13/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 1409.96, &quot;lead&quot;: 243.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;07 [PÓS-GRADUAÇÃO][BLACK][VENDAS][CBO][16/10/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 1096.52, &quot;lead&quot;: 90.0, &quot;buy&quot;: 3.0, &quot;rec&quot;: 5262.42}, {&quot;nome&quot;: &quot;04 [BLACK] [PÓS] [LEAD] [CBO] [13/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 787.44, &quot;lead&quot;: 71.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}]}, {&quot;id&quot;: &quot;vagal&quot;, &quot;nome&quot;: &quot;Vagal&quot;, &quot;resultado&quot;: &quot;venda&quot;, &quot;ticket&quot;: 697, &quot;status&quot;: &quot;ativo&quot;, &quot;mes&quot;: {&quot;sp&quot;: 9240.419999999998, &quot;lead&quot;: 23.0, &quot;buy&quot;: 29.0, &quot;rec&quot;: 18122.0}, &quot;dias&quot;: [{&quot;dia&quot;: &quot;2026-10-07&quot;, &quot;sp&quot;: 394.85, &quot;lead&quot;: 3.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-08&quot;, &quot;sp&quot;: 422.03, &quot;lead&quot;: 0.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 697.0}, {&quot;dia&quot;: &quot;2026-10-09&quot;, &quot;sp&quot;: 349.44, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-10&quot;, &quot;sp&quot;: 359.44, &quot;lead&quot;: 0.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 1394.0}, {&quot;dia&quot;: &quot;2026-10-11&quot;, &quot;sp&quot;: 393.35, &quot;lead&quot;: 0.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 1394.0}, {&quot;dia&quot;: &quot;2026-10-12&quot;, &quot;sp&quot;: 396.02, &quot;lead&quot;: 1.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-13&quot;, &quot;sp&quot;: 263.89, &quot;lead&quot;: 1.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-14&quot;, &quot;sp&quot;: 270.48, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-15&quot;, &quot;sp&quot;: 310.53, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-16&quot;, &quot;sp&quot;: 462.03999999999996, &quot;lead&quot;: 2.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-17&quot;, &quot;sp&quot;: 590.0699999999999, &quot;lead&quot;: 0.0, &quot;buy&quot;: 5.0, &quot;rec&quot;: 3485.0}, {&quot;dia&quot;: &quot;2026-10-18&quot;, &quot;sp&quot;: 686.98, &quot;lead&quot;: 0.0, &quot;buy&quot;: 3.0, &quot;rec&quot;: 2091.0}, {&quot;dia&quot;: &quot;2026-10-19&quot;, &quot;sp&quot;: 701.3500000000001, &quot;lead&quot;: 1.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 1394.0}, {&quot;dia&quot;: &quot;2026-10-20&quot;, &quot;sp&quot;: 657.47, &quot;lead&quot;: 0.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 697.0}, {&quot;dia&quot;: &quot;2026-10-21&quot;, &quot;sp&quot;: 566.2700000000001, &quot;lead&quot;: 0.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 697.0}], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;[VAGAL][VENDAS][CBO][PÁGINA NOVA][23/09/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 4881.4, &quot;lead&quot;: 9.0, &quot;buy&quot;: 21.0, &quot;rec&quot;: 12546.0}, {&quot;nome&quot;: &quot;[VAGAL][BLACK][VENDAS][CBO][ABERTO][16/10/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 1188.56, &quot;lead&quot;: 1.0, &quot;buy&quot;: 5.0, &quot;rec&quot;: 3485.0}, {&quot;nome&quot;: &quot;[VAGAL][WHATS RAFA][CBO][PÁGINA NOVA][30/09/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 790.07, &quot;lead&quot;: 11.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[VAGAL][VENDAS][CBO][TESTE PÁGINA][FORMACAOVAGAL][MELHORES][16/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 615.13, &quot;lead&quot;: 0.0, &quot;buy&quot;: 2.0, &quot;rec&quot;: 1394.0}, {&quot;nome&quot;: &quot;[VAGAL][VENDAS][CBO][TESTE BOTÃO][09/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 612.75, &quot;lead&quot;: 0.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 697.0}, {&quot;nome&quot;: &quot;[VAGAL][VENDAS][CBO][PÁGINA NOVA][VARIAÇÕES][07/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 383.1, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[VAGAL] [FER] [CAIXINHA 02] [PGNOVA] [WHATS] [CBO] [01/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 246.20999999999998, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[VAGAL][VENDAS][CBO][ABERTO][PÁGINA NOVA][VARIAÇÕES CAMPEÃO][19/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 234.06, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;02- [VAGAL][VENDAS][CBO][PÁGINA NOVA][30/09/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 184.95999999999998, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[VAGAL][WHATS FER][CBO][PÁGINA NOVA][07/10/26]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 104.18, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}]}, {&quot;id&quot;: &quot;tdcs&quot;, &quot;nome&quot;: &quot;tDCS&quot;, &quot;resultado&quot;: &quot;lead&quot;, &quot;ticket&quot;: null, &quot;status&quot;: &quot;pausado (todas as campanhas de tDCS pausadas em 15/10)&quot;, &quot;mes&quot;: {&quot;sp&quot;: 3395.54, &quot;lead&quot;: 38.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, &quot;dias&quot;: [{&quot;dia&quot;: &quot;2026-10-07&quot;, &quot;sp&quot;: 296.73, &quot;lead&quot;: 2.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-08&quot;, &quot;sp&quot;: 268.27, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-09&quot;, &quot;sp&quot;: 181.14000000000001, &quot;lead&quot;: 2.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-10&quot;, &quot;sp&quot;: 201.7, &quot;lead&quot;: 4.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-11&quot;, &quot;sp&quot;: 260.05, &quot;lead&quot;: 4.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-12&quot;, &quot;sp&quot;: 214.7, &quot;lead&quot;: 3.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-13&quot;, &quot;sp&quot;: 162.31, &quot;lead&quot;: 2.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-14&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-15&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-16&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-17&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-18&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-19&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-20&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-21&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;[tDCS][RIO][14/09/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 2817.33, &quot;lead&quot;: 37.0, &quot;buy&quot;: 1.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[tDCS][FER][CBO][01/10/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 436.98999999999995, &quot;lead&quot;: 1.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;[tDCS][FER][07/10/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 141.22, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}]}, {&quot;id&quot;: &quot;grupo-estudo&quot;, &quot;nome&quot;: &quot;Grupo de Estudo&quot;, &quot;resultado&quot;: &quot;lead&quot;, &quot;ticket&quot;: 0, &quot;status&quot;: &quot;ativo&quot;, &quot;mes&quot;: {&quot;sp&quot;: 909.5699999999999, &quot;lead&quot;: 323.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, &quot;dias&quot;: [{&quot;dia&quot;: &quot;2026-10-07&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-08&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-09&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-10&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-11&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-12&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-13&quot;, &quot;sp&quot;: 41.73, &quot;lead&quot;: 6.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-14&quot;, &quot;sp&quot;: 85.1, &quot;lead&quot;: 24.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-15&quot;, &quot;sp&quot;: 71.05, &quot;lead&quot;: 24.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-16&quot;, &quot;sp&quot;: 63.98, &quot;lead&quot;: 20.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-17&quot;, &quot;sp&quot;: 83.62, &quot;lead&quot;: 28.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-18&quot;, &quot;sp&quot;: 61.99, &quot;lead&quot;: 26.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-19&quot;, &quot;sp&quot;: 43.9, &quot;lead&quot;: 18.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-20&quot;, &quot;sp&quot;: 51.57, &quot;lead&quot;: 22.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-21&quot;, &quot;sp&quot;: 52.78, &quot;lead&quot;: 30.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;02 - [GRUPO DE ESTUDO][LEAD][WHATS][27/09/2026]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 766.1600000000001, &quot;lead&quot;: 274.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;nome&quot;: &quot;02 - [SONO] [GRUPO DE ESTUDO][LEAD][WHATS][27/09/2026]&quot;, &quot;conta&quot;: &quot;Conta 02-TEA&quot;, &quot;sp&quot;: 143.41, &quot;lead&quot;: 49.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}]}, {&quot;id&quot;: &quot;outros&quot;, &quot;nome&quot;: &quot;Outros&quot;, &quot;resultado&quot;: &quot;lead&quot;, &quot;ticket&quot;: null, &quot;status&quot;: &quot;&quot;, &quot;mes&quot;: {&quot;sp&quot;: 195.95, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, &quot;dias&quot;: [{&quot;dia&quot;: &quot;2026-10-07&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-08&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-09&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-10&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-11&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-12&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-13&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-14&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-15&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-16&quot;, &quot;sp&quot;: 63.57, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-17&quot;, &quot;sp&quot;: 80.6, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-18&quot;, &quot;sp&quot;: 49.16, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-19&quot;, &quot;sp&quot;: 2.62, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-20&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, {&quot;dia&quot;: &quot;2026-10-21&quot;, &quot;sp&quot;: 0.0, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;[WORKSHOP-NÃO INVASIVA][VENDAS][CBO][ABERTO][16/10/26]&quot;, &quot;conta&quot;: &quot;Cursos Alexandre&quot;, &quot;sp&quot;: 195.95, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}]}]}, {&quot;id&quot;: &quot;jessica&quot;, &quot;nome&quot;: &quot;Jéssica&quot;, &quot;status&quot;: &quot;sem_acesso&quot;, &quot;motivo&quot;: &quot;conta de anúncios não conectada&quot;, &quot;produtos&quot;: []}, {&quot;id&quot;: &quot;metrik&quot;, &quot;nome&quot;: &quot;Metrik&quot;, &quot;status&quot;: &quot;ok&quot;, &quot;fonte&quot;: &quot;relatório exportado do Gerenciador (2026-10-01_a_2026-10-22_campanhas.csv)&quot;, &quot;periodo_mes&quot;: [&quot;2026-10-01&quot;, &quot;2026-10-22&quot;], &quot;periodo_dias&quot;: null, &quot;produtos&quot;: [{&quot;id&quot;: &quot;rastreio&quot;, &quot;nome&quot;: &quot;Rastreio Próprio&quot;, &quot;resultado&quot;: &quot;venda&quot;, &quot;rotulo_res&quot;: &quot;leads&quot;, &quot;mes&quot;: {&quot;sp&quot;: 2757.78, &quot;lead&quot;: 816.0, &quot;buy&quot;: 26.0, &quot;rec&quot;: 4749.48}, &quot;dias&quot;: [], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;RP | VALIDAÇÃO | CBO | 2026-10-13&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 1671.62, &quot;lead&quot;: 0.0, &quot;buy&quot;: 20.0, &quot;rec&quot;: 4019.77, &quot;status&quot;: &quot;ativa&quot;}, {&quot;nome&quot;: &quot;RASTREIO PRÓPRIO | ABO | VENDAS | 2026-10-08&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 808.45, &quot;lead&quot;: 0.0, &quot;buy&quot;: 6.0, &quot;rec&quot;: 729.71, &quot;status&quot;: &quot;inativa&quot;}, {&quot;nome&quot;: &quot;RASTREIO PRÓPRIO | ABO | VISITA PERFIL | 2026-10-08&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 269.06, &quot;lead&quot;: 786.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0, &quot;status&quot;: &quot;ativa&quot;}, {&quot;nome&quot;: &quot;RP | TOPO | VISITA PERFIL | ABERTO + LAL | 2026-10-13&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 8.65, &quot;lead&quot;: 30.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0, &quot;status&quot;: &quot;inativa&quot;}]}, {&quot;id&quot;: &quot;kommo&quot;, &quot;nome&quot;: &quot;Kommo Academy&quot;, &quot;resultado&quot;: &quot;venda&quot;, &quot;rotulo_res&quot;: &quot;leads&quot;, &quot;mes&quot;: {&quot;sp&quot;: 713.09, &quot;lead&quot;: 0.0, &quot;buy&quot;: 3.0, &quot;rec&quot;: 2241.0}, &quot;dias&quot;: [], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;CURSO | Kommo Academy 997 | Vendas | 2026-08&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 713.09, &quot;lead&quot;: 0.0, &quot;buy&quot;: 3.0, &quot;rec&quot;: 2241.0, &quot;status&quot;: &quot;inativa&quot;}]}, {&quot;id&quot;: &quot;topo&quot;, &quot;nome&quot;: &quot;Topo · seguidores&quot;, &quot;resultado&quot;: &quot;perfil&quot;, &quot;rotulo_res&quot;: &quot;visitas ao perfil&quot;, &quot;mes&quot;: {&quot;sp&quot;: 154.68, &quot;lead&quot;: 513.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, &quot;dias&quot;: [], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;TOPO | Seguidores | Tráfego | 2026-08&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 154.68, &quot;lead&quot;: 513.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0, &quot;status&quot;: &quot;ativa&quot;}]}, {&quot;id&quot;: &quot;comunidade&quot;, &quot;nome&quot;: &quot;Comunidade v3&quot;, &quot;resultado&quot;: &quot;venda&quot;, &quot;rotulo_res&quot;: &quot;leads&quot;, &quot;mes&quot;: {&quot;sp&quot;: 42.77, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0}, &quot;dias&quot;: [], &quot;campanhas&quot;: [{&quot;nome&quot;: &quot;COMUNIDADE V3 | CBO | VENDAS | FUNIL | 2026-10-21&quot;, &quot;conta&quot;: &quot;Metrik&quot;, &quot;sp&quot;: 42.77, &quot;lead&quot;: 0.0, &quot;buy&quot;: 0.0, &quot;rec&quot;: 0.0, &quot;status&quot;: &quot;ativa&quot;}]}]}]};/*FIM-DADOS*/
+
+// Notas fixas por produto (dados que não vêm do pixel).
+const NOTAS = {
+  &quot;pos-black&quot;: &quot;Pessoas reais nos grupos vindas do anúncio: 1.625, CPL real de R$ 21,98 (SendFlow, 22/10). O lead do pixel é mais barato porque só 1 em cada 4 entra no grupo. A venda abre em 28/10; as vendas de agora vêm da campanha 07 de vendas da pós.&quot;,
+  &quot;vagal&quot;: &quot;Venda direta pela página. Faturamento do pixel; venda do comercial não entra toda nele.&quot;,
+  &quot;tdcs&quot;: &quot;Campanhas de tDCS pausadas em 15/10.&quot;,
+  &quot;grupo-estudo&quot;: &quot;Gratuito: o CPL depende de quanto do grupo vira venda depois.&quot;,
+  &quot;outros&quot;: &quot;Workshop de R$ 9,90, pausado sem venda.&quot;,
+  &quot;rastreio&quot;: &quot;Inclui as campanhas de visita ao perfil do Rastreio Próprio (816 visitas). O CPA das campanhas de venda, sem elas, fica em R$ 95.&quot;,
+  &quot;kommo&quot;: &quot;Campanha inativa hoje. Meta de CPA: R$ 200 sobre o ticket de R$ 997.&quot;,
+  &quot;comunidade&quot;: &quot;Começou em 21/10. Meta de CPA perto de R$ 140 (ticket R$ 697), a confirmar.&quot;,
+  &quot;topo&quot;: &quot;Campanha de seguidores: o resultado é visita ao perfil, não venda.&quot;
+};
+
+const $ = s =&gt; document.querySelector(s);
+const esc = s =&gt; String(s ?? &quot;&quot;).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g, c =&gt; ({&quot;&amp;&quot;:&quot;&amp;amp;&quot;,&quot;&lt;&quot;:&quot;&amp;lt;&quot;,&quot;&gt;&quot;:&quot;&amp;gt;&quot;,&#x27;&quot;&#x27;:&quot;&amp;quot;&quot;,&quot;&#x27;&quot;:&quot;&amp;#39;&quot;}[c]));
+const brl = (v, d=0) =&gt; v==null||!isFinite(v) ? &quot;—&quot; : &quot;R$ &quot; + v.toLocaleString(&quot;pt-BR&quot;,{minimumFractionDigits:d,maximumFractionDigits:d});
+const num = v =&gt; (v||0).toLocaleString(&quot;pt-BR&quot;,{maximumFractionDigits:0});
+const div = (a,b) =&gt; b ? a/b : null;
+const dm = iso =&gt; iso.slice(8,10)+&quot;/&quot;+iso.slice(5,7);
+const met = s =&gt; ({sp:s.sp, lead:s.lead, buy:s.buy, rec:s.rec, cpl:div(s.sp,s.lead), cpa:div(s.sp,s.buy), roas:div(s.rec,s.sp)});
+
+function linhaProduto(p, proj){
+  const m = met(p.mes), venda = p.resultado===&quot;venda&quot;, perfil = p.resultado===&quot;perfil&quot;;
+  // CPA e ROAS só fazem sentido em produto de venda; em captação o número que importa é o CPL
+  // (em campanha de seguidores, o &quot;lead&quot; é a visita ao perfil).
+  return `&lt;tr class=&quot;click&quot; tabindex=&quot;0&quot; data-proj=&quot;${proj}&quot; data-prod=&quot;${esc(p.id)}&quot;&gt;
+    &lt;td&gt;${esc(p.nome)}&lt;span class=&quot;sub&quot;&gt;${venda?&quot;venda direta&quot;:perfil?&quot;visitas ao perfil&quot;:&quot;captação de lead&quot;}&lt;/span&gt;&lt;/td&gt;
+    &lt;td class=&quot;n&quot;&gt;${brl(m.sp)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${venda?&quot;—&quot;:num(m.lead)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${venda?&quot;—&quot;:brl(m.cpl,2)}&lt;/td&gt;
+    &lt;td class=&quot;n&quot;&gt;${num(m.buy)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${venda?brl(m.cpa,2):&quot;—&quot;}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(m.rec)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${venda&amp;&amp;m.roas?m.roas.toLocaleString(&quot;pt-BR&quot;,{maximumFractionDigits:2}):&quot;—&quot;}&lt;/td&gt;&lt;/tr&gt;`;
+}
+
+function renderGeral(){
+  $(&quot;#stamp&quot;).textContent = `mês atual · gerado em ${DADOS.geradoEm}`;
+  const sem = DADOS.projetos.filter(p=&gt;p.status!==&quot;ok&quot;).length;
+  $(&quot;#geralLede&quot;).textContent = `Cada projeto com seus produtos, no mês atual. Clique num produto para ver o detalhe e o diário dos últimos 15 dias.${sem?` ${sem} projeto(s) ainda sem conta de anúncios lida.`:&quot;&quot;}`;
+  $(&quot;#geralProjetos&quot;).innerHTML = DADOS.projetos.map(pj=&gt;{
+    if(pj.status!==&quot;ok&quot;) return `&lt;div class=&quot;box&quot;&gt;&lt;div class=&quot;ph&quot;&gt;&lt;h4&gt;${esc(pj.nome)}&lt;/h4&gt;&lt;span class=&quot;pill p-crit&quot;&gt;sem leitura&lt;/span&gt;&lt;button class=&quot;go&quot; data-tab=&quot;${pj.id}&quot;&gt;Abrir&lt;/button&gt;&lt;/div&gt;
+      &lt;div class=&quot;semleitura&quot;&gt;Sem números de tráfego: ${esc(pj.motivo)}.&lt;/div&gt;&lt;/div&gt;`;
+    const t = pj.produtos.reduce((a,p)=&gt;{[&quot;sp&quot;,&quot;lead&quot;,&quot;buy&quot;,&quot;rec&quot;].forEach(k=&gt;a[k]+=p.mes[k]); return a;},{sp:0,lead:0,buy:0,rec:0});
+    return `&lt;div class=&quot;box&quot;&gt;&lt;div class=&quot;ph&quot;&gt;&lt;h4&gt;${esc(pj.nome)}&lt;/h4&gt;&lt;span class=&quot;tot&quot;&gt;${brl(t.sp)} &lt;span&gt;investidos de ${dm(pj.periodo_mes[0])} a ${dm(pj.periodo_mes[1])}&lt;/span&gt;&lt;/span&gt;${pj.fonte?`&lt;span class=&quot;pill p-info&quot;&gt;relatório exportado&lt;/span&gt;`:&quot;&quot;}&lt;button class=&quot;go&quot; data-tab=&quot;${pj.id}&quot;&gt;Abrir&lt;/button&gt;&lt;/div&gt;
+      &lt;div class=&quot;tbl&quot;&gt;&lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Produto&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Investido&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Leads / visitas&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;CPL&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Vendas&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;CPA&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Faturamento&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;ROAS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;${pj.produtos.map(p=&gt;linhaProduto(p,pj.id)).join(&quot;&quot;)}
+          &lt;tr class=&quot;total&quot;&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(t.sp)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${num(t.buy)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(t.rec)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+      &lt;p class=&quot;note&quot;&gt;Vendas e faturamento são do pixel. Em produto de venda, CPA = investido ÷ vendas; em captação de lead, o custo é o CPL.&lt;/p&gt;&lt;/div&gt;`;
+  }).join(&quot;&quot;);
+}
+
+const prodSel = {};
+function renderProj(id){
+  const pj = DADOS.projetos.find(p=&gt;p.id===id), tabsEl = $(`#${id}Tabs`), out = $(`#${id}Produto`);
+  if(!pj || pj.status!==&quot;ok&quot; || !tabsEl) return;
+  if(!pj.produtos.find(p=&gt;p.id===prodSel[id])) prodSel[id] = pj.produtos[0]?.id;
+  tabsEl.innerHTML = pj.produtos.map(p=&gt;`&lt;button type=&quot;button&quot; data-proj=&quot;${id}&quot; data-prod=&quot;${esc(p.id)}&quot; aria-pressed=&quot;${p.id===prodSel[id]}&quot;&gt;${esc(p.nome)}&lt;span&gt;${brl(p.mes.sp)}&lt;/span&gt;&lt;/button&gt;`).join(&quot;&quot;);
+  const p = pj.produtos.find(x=&gt;x.id===prodSel[id]); if(!p) return;
+  const m = met(p.mes), ehVenda = p.resultado===&quot;venda&quot;, rot = p.rotulo_res || &quot;leads&quot;;
+  const temDias = (p.dias||[]).length &gt; 0;
+  const n15 = met((p.dias||[]).reduce((a,d)=&gt;{[&quot;sp&quot;,&quot;lead&quot;,&quot;buy&quot;,&quot;rec&quot;].forEach(k=&gt;a[k]+=d[k]); return a;},{sp:0,lead:0,buy:0,rec:0}));
+  out.innerHTML = `
+    &lt;div class=&quot;kpis&quot;&gt;
+      &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Investido no mês&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${brl(m.sp)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${dm(pj.periodo_mes[0])} a ${dm(pj.periodo_mes[1])}&lt;/div&gt;&lt;/div&gt;
+      ${ehVenda?&quot;&quot;:`&lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;${rot[0].toUpperCase()+rot.slice(1)}&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${num(m.lead)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;custo ${brl(m.cpl,2)}&lt;/div&gt;&lt;/div&gt;`}
+      &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Vendas no pixel&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${num(m.buy)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${ehVenda?`CPA ${brl(m.cpa,2)}`:&quot;sem venda direta: veja o custo&quot;}&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Faturamento no pixel&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${brl(m.rec)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;ROAS ${m.roas?m.roas.toLocaleString(&quot;pt-BR&quot;,{maximumFractionDigits:2}):&quot;—&quot;}&lt;/div&gt;&lt;/div&gt;
+      ${temDias?`&lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;l&quot;&gt;Últimos 15 dias&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${brl(n15.sp)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${ehVenda?`${num(n15.buy)} vendas · CPA ${brl(n15.cpa,0)}`:`${num(n15.lead)} ${rot} · ${brl(n15.cpl,2)}`}&lt;/div&gt;&lt;/div&gt;`:&quot;&quot;}
+    &lt;/div&gt;
+    ${NOTAS[p.id]?`&lt;p class=&quot;note&quot; style=&quot;margin:0&quot;&gt;${esc(NOTAS[p.id])}&lt;/p&gt;`:&quot;&quot;}
+    ${temDias?diarioHtml(pj,p,ehVenda):`&lt;div class=&quot;box&quot;&gt;&lt;div class=&quot;semleitura&quot;&gt;&lt;span class=&quot;pill p-warn&quot;&gt;sem diário&lt;/span&gt;O relatório exportado veio só com o total do mês. O diário dos últimos 15 dias aparece quando o token da conta for liberado.&lt;/div&gt;&lt;/div&gt;`}
+    &lt;div class=&quot;box&quot;&gt;
+      &lt;h3&gt;Campanhas do produto no mês&lt;/h3&gt;
+      &lt;div class=&quot;tbl&quot;&gt;&lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Campanha&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Investido&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;${ehVenda?&quot;Leads / visitas&quot;:rot[0].toUpperCase()+rot.slice(1)}&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Custo&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Vendas&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;CPA&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;ROAS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;${p.campanhas.map(c=&gt;{const x=met(c); return `&lt;tr&gt;&lt;td&gt;${esc(c.nome)}&lt;span class=&quot;sub&quot;&gt;${esc([c.conta,c.status].filter(Boolean).join(&quot; · &quot;))}&lt;/span&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.sp)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${num(x.lead)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.cpl,2)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${num(x.buy)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.cpa,0)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${x.roas?x.roas.toLocaleString(&quot;pt-BR&quot;,{maximumFractionDigits:2}):&quot;—&quot;}&lt;/td&gt;&lt;/tr&gt;`;}).join(&quot;&quot;)}&lt;/tbody&gt;
+      &lt;/table&gt;&lt;/div&gt;
+    &lt;/div&gt;`;
+  if(temDias) desenharBarras(out.querySelector(&quot;.chart&quot;), p.dias, ehVenda);
+}
+function diarioHtml(pj, p, ehVenda){
+  return `
+    &lt;div class=&quot;box&quot;&gt;
+      &lt;h3&gt;Investido por dia · ${dm(pj.periodo_dias[0])} a ${dm(pj.periodo_dias[1])}&lt;/h3&gt;
+      &lt;div class=&quot;chart&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;box&quot;&gt;
+      &lt;h3&gt;Diário · últimos 15 dias&lt;/h3&gt;
+      &lt;div class=&quot;tbl&quot;&gt;&lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Dia&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Investido&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Leads&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;CPL&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Vendas&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;CPA&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Faturamento&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;ROAS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;${p.dias.slice().reverse().map(d=&gt;{const x=met(d); const vazio=!d.sp;
+          return `&lt;tr&gt;&lt;td class=&quot;${vazio?&quot;vazio&quot;:&quot;&quot;}&quot;&gt;${dm(d.dia)}&lt;/td&gt;${vazio?`&lt;td class=&quot;n vazio&quot; colspan=&quot;7&quot;&gt;sem gasto&lt;/td&gt;`:
+          `&lt;td class=&quot;n&quot;&gt;${brl(x.sp)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${num(x.lead)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.cpl,2)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${num(x.buy)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.cpa,0)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${brl(x.rec)}&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;${x.roas?x.roas.toLocaleString(&quot;pt-BR&quot;,{maximumFractionDigits:2}):&quot;—&quot;}&lt;/td&gt;`}&lt;/tr&gt;`;}).join(&quot;&quot;)}
+        &lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+    &lt;/div&gt;`;
+}
+
+// Barras do investido diário, com a dica de leads/vendas ao passar o mouse.
+function desenharBarras(el, dias, ehVenda){
+  const W=640, H=200, L=56, R=8, T=12, B=26, max = Math.max(...dias.map(d=&gt;d.sp), 1);
+  const passo = [100,200,500,1000,2000,5000,10000].find(s=&gt;max/s&lt;=4) || 20000;
+  const topo = Math.ceil(max/passo)*passo, y = v =&gt; T + (H-T-B)*(1-v/topo);
+  const bw = (W-L-R)/dias.length, gap = 4;
+  let g = &quot;&quot;;
+  for(let v=0; v&lt;=topo; v+=passo){ g += `&lt;line class=&quot;gl&quot; x1=&quot;${L}&quot; x2=&quot;${W-R}&quot; y1=&quot;${y(v)}&quot; y2=&quot;${y(v)}&quot;/&gt;&lt;text class=&quot;ax&quot; x=&quot;${L-6}&quot; y=&quot;${y(v)+4}&quot; text-anchor=&quot;end&quot;&gt;${v&gt;=1000?(v/1000).toLocaleString(&quot;pt-BR&quot;)+&quot; mil&quot;:v}&lt;/text&gt;`; }
+  dias.forEach((d,i)=&gt;{
+    const x = L + i*bw + gap/2, w = bw-gap, h = y(0)-y(d.sp), r = Math.min(4, w/2, h);
+    if(d.sp&gt;0) g += `&lt;path class=&quot;bar&quot; data-i=&quot;${i}&quot; d=&quot;M${x},${y(0)} V${y(d.sp)+r} Q${x},${y(d.sp)} ${x+r},${y(d.sp)} H${x+w-r} Q${x+w},${y(d.sp)} ${x+w},${y(d.sp)+r} V${y(0)} Z&quot;/&gt;`;
+    if(i%2===0 || i===dias.length-1) g += `&lt;text class=&quot;ax&quot; x=&quot;${x+w/2}&quot; y=&quot;${H-8}&quot; text-anchor=&quot;middle&quot;&gt;${dm(d.dia)}&lt;/text&gt;`;
+    g += `&lt;rect class=&quot;hit&quot; data-i=&quot;${i}&quot; x=&quot;${L+i*bw}&quot; y=&quot;${T}&quot; width=&quot;${bw}&quot; height=&quot;${H-T-B}&quot;/&gt;`;
+  });
+  el.innerHTML = `&lt;svg viewBox=&quot;0 0 ${W} ${H}&quot; role=&quot;img&quot; aria-label=&quot;Investido por dia nos últimos 15 dias&quot;&gt;${g}&lt;/svg&gt;&lt;div class=&quot;tip&quot; hidden&gt;&lt;/div&gt;`;
+  const tip = el.querySelector(&quot;.tip&quot;), svg = el.querySelector(&quot;svg&quot;);
+  const mostrar = i =&gt; { const d = dias[i], x = met(d), r = svg.getBoundingClientRect(), er = el.getBoundingClientRect();
+    el.querySelectorAll(&quot;.bar&quot;).forEach(b=&gt;b.classList.toggle(&quot;dim&quot;, +b.dataset.i!==i));
+    tip.innerHTML = `&lt;b&gt;${dm(d.dia)}&lt;/b&gt; · ${brl(x.sp)}&lt;br&gt;${ehVenda?`${num(x.buy)} vendas · CPA ${brl(x.cpa,0)}`:`${num(x.lead)} leads · CPL ${brl(x.cpl,2)}`}`;
+    const px = (L + (i+.5)*bw) / W * r.width + (r.left-er.left), py = y(d.sp) / H * r.height + (r.top-er.top);
+    tip.style.left = Math.min(Math.max(px, 70), er.width-70)+&quot;px&quot;; tip.style.top = py+&quot;px&quot;; tip.hidden = false; };
+  const esconder = () =&gt; { tip.hidden = true; el.querySelectorAll(&quot;.bar&quot;).forEach(b=&gt;b.classList.remove(&quot;dim&quot;)); };
+  el.querySelectorAll(&quot;.hit&quot;).forEach(h=&gt;{ h.addEventListener(&quot;mouseenter&quot;,()=&gt;mostrar(+h.dataset.i)); h.addEventListener(&quot;click&quot;,()=&gt;mostrar(+h.dataset.i)); });
+  svg.addEventListener(&quot;mouseleave&quot;, esconder);
+}
+
+// Abas
+const tabs=[...document.querySelectorAll(&#x27;nav.tabs button&#x27;)];
+function show(id){
+  tabs.forEach(b=&gt;{const on=b.getAttribute(&#x27;aria-controls&#x27;)===id; b.setAttribute(&#x27;aria-selected&#x27;,on); document.getElementById(b.getAttribute(&#x27;aria-controls&#x27;)).hidden=!on;});
+  try{localStorage.setItem(&#x27;dngrow-aba&#x27;,id)}catch(e){}
+  window.scrollTo(0,0);
+}
+tabs.forEach(b=&gt;b.addEventListener(&#x27;click&#x27;,()=&gt;show(b.getAttribute(&#x27;aria-controls&#x27;))));
+document.addEventListener(&quot;click&quot;, ev=&gt;{
+  const go = ev.target.closest(&quot;[data-tab]&quot;); if(go){ show(go.dataset.tab); return; }
+  const row = ev.target.closest(&quot;tr[data-prod]&quot;); if(row){ prodSel[row.dataset.proj]=row.dataset.prod; renderProj(row.dataset.proj); show(row.dataset.proj); return; }
+  const b = ev.target.closest(&quot;.sub-tabs button&quot;); if(b){ prodSel[b.dataset.proj]=b.dataset.prod; renderProj(b.dataset.proj); }
+});
+document.addEventListener(&quot;keydown&quot;, ev=&gt;{ if(ev.key===&quot;Enter&quot;){ const row=ev.target.closest?.(&quot;tr[data-prod]&quot;); if(row) row.click(); } });
+
+renderGeral(); DADOS.projetos.forEach(p=&gt;renderProj(p.id));
+const ids=tabs.map(b=&gt;b.getAttribute(&#x27;aria-controls&#x27;));
+let first=(location.hash||&#x27;&#x27;).slice(1);
+if(!ids.includes(first)){ try{first=localStorage.getItem(&#x27;dngrow-aba&#x27;)}catch(e){first=null} }
+show(ids.includes(first)?first:&#x27;geral&#x27;);
+&lt;/script&gt;
+"></iframe><!--FIM-PROJETOS-->
+  </section>
 
   <section id="p-funil">
     <div class="kpis" id="kpis"></div>
@@ -799,15 +1137,24 @@ async function montagemClick(t){
 
 function setTab(k){
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===k)));
-  ["funil","montagem","fila","metodo"].forEach(x=>$("#p-"+x).hidden = x!==k);
-  try{ localStorage.setItem("dngrow-tab",k); }catch{}
+  ["numeros","funil","montagem","fila","metodo"].forEach(x=>$("#p-"+x).hidden = x!==k);
+  try{ localStorage.setItem("dngrow-tab2",k); }catch{}
+  if(k==="numeros") ajustarNumeros();
 }
 
 function renderAll(){ renderKpis(); renderBoard(); renderQueue(); renderMontagem(); if(openId) renderDrawer(); }
 
 /* ---------- boot ---------- */
 renderMethod(); renderKpis(); renderBoard(); renderQueue();
-try{ const t=localStorage.getItem("dngrow-tab"); if(t) setTab(t); }catch{}
+// A aba Números é a página DN Grow Projetos embutida (iframe srcdoc, mesmo documento); a altura acompanha o conteúdo.
+function ajustarNumeros(){
+  const f = $("#numerosFrame"); if(!f) return;
+  const fit = () => { try{ const d=f.contentDocument; if(d&&d.body) f.style.height = Math.max(600, d.documentElement.scrollHeight) + "px"; }catch{} };
+  fit();
+  if(!f._obs){ try{ f._obs = new ResizeObserver(fit); f._obs.observe(f.contentDocument.body); }catch{} }
+}
+$("#numerosFrame")?.addEventListener("load", ()=>{ $("#numerosFrame")._obs=null; ajustarNumeros(); });
+try{ const t=localStorage.getItem("dngrow-tab2"); if(t) setTab(t); }catch{}
 async function bootStatic(){
   // Versão do GitHub Pages: lê a foto do funil em dados.json, só leitura.
   try{

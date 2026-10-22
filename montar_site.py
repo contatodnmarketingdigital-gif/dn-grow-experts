@@ -42,7 +42,6 @@ def documento(corpo):
 LINK = '<a href="{href}" style="font:600 13px system-ui,sans-serif;color:#3550c4;text-decoration:none;border:1px solid #d6dbe8;border-radius:8px;padding:6px 12px;background:#fff">{txt}</a>'
 
 corpo = (AQUI / "fonte" / "painel.html").read_text(encoding="utf-8")
-corpo = corpo.replace('<div class="actions">', '<div class="actions">' + LINK.format(href="projetos.html", txt="Projetos e números →"), 1)
 (AQUI / "index.html").write_text(documento(corpo), encoding="utf-8")
 
 # Página de Projetos (números por produto): vem pronta, com os dados dentro, da pasta dn-grow-projetos.
