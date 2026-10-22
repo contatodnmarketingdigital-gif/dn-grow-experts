@@ -210,6 +210,19 @@ button{cursor:pointer}
 .banner{margin-top:16px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
 .ro{font-size:12px;color:var(--muted);margin-top:8px}
+/* tráfego do expert */
+.m.alerta .v{color:var(--bad)}
+.tr-wrap{overflow-x:auto;margin-top:12px}
+.tr{width:100%;border-collapse:collapse;font-size:12px}
+.tr th,.tr td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.tr th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;white-space:nowrap}
+.tr td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.tr th.n{text-align:right}
+.tr td.nm{min-width:180px}
+.tr .sub{display:block;color:var(--muted);font-size:11px}
+.tr-h{font-size:12px;font-weight:700;margin:14px 0 0;color:var(--fg)}
+.pend{margin:10px 0 0;padding-left:18px;font-size:12px}
+.pend li{margin:2px 0}
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
 </style>
 
@@ -352,13 +365,32 @@ function perfilHtml(e){
     ${(p.relatorios||[]).length?`<ul class="docs">${p.relatorios.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`:""}
   </div>`;
 }
+// Tráfego: e.trafego = {status:"ok"|"sem_acesso", chip, fonte, periodo, resumo:[{rotulo,valor,comparacao,alerta}],
+//   contas:[{nome,status,gasto,leads,cpl,vendas,cpa,faturamento,roas}], campanhas:[{nome,conta,status,gasto,resultado,custo,vendas,roas}],
+//   leitura, pendencias:[texto]}. Os números chegam prontos em texto, do jeito que o relatório diário escreve.
+function trafegoHtml(e){
+  const t = e.trafego; if(!t) return "";
+  const cel = v => `<td class="n">${esc(v??"—")}</td>`;
+  const contas = (t.contas||[]).length ? `<div class="tr-h">Por conta</div><div class="tr-wrap"><table class="tr">
+      <thead><tr><th>Conta</th><th class="n">Investido</th><th class="n">Leads</th><th class="n">CPL</th><th class="n">Vendas</th><th class="n">CPA</th><th class="n">Faturamento</th><th class="n">ROAS</th></tr></thead>
+      <tbody>${t.contas.map(c=>`<tr><td class="nm">${esc(c.nome)}${c.status?`<span class="sub">${esc(c.status)}</span>`:""}</td>${cel(c.gasto)}${cel(c.leads)}${cel(c.cpl)}${cel(c.vendas)}${cel(c.cpa)}${cel(c.faturamento)}${cel(c.roas)}</tr>`).join("")}</tbody></table></div>` : "";
+  const camps = (t.campanhas||[]).length ? `<div class="tr-h">Por campanha</div><div class="tr-wrap"><table class="tr">
+      <thead><tr><th>Campanha</th><th class="n">Investido</th><th class="n">Resultado</th><th class="n">Custo</th><th class="n">Vendas</th><th class="n">ROAS</th></tr></thead>
+      <tbody>${t.campanhas.map(c=>`<tr><td class="nm">${esc(c.nome)}<span class="sub">${esc([c.conta,c.status].filter(Boolean).join(" · "))}</span></td>${cel(c.gasto)}${cel(c.resultado)}${cel(c.custo)}${cel(c.vendas)}${cel(c.roas)}</tr>`).join("")}</tbody></table></div>` : "";
+  return `<div class="sec"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3>Tráfego · investimento e resultado</h3><p class="why" style="margin:0">${esc([t.periodo,t.fonte].filter(Boolean).join(" · "))}</p></div>${t.status==="sem_acesso"?`<span class="pill bad">Sem acesso à conta</span>`:`<span class="pill good">Lido da conta</span>`}</div>
+    ${(t.resumo||[]).length?`<div class="mgrid">${t.resumo.map(m=>`<div class="m ${m.alerta?"alerta":""}"><div class="v mono">${esc(m.valor)}</div><div class="l">${esc(m.rotulo)}</div>${m.comparacao?`<div class="c">${esc(m.comparacao)}</div>`:""}</div>`).join("")}</div>`:""}
+    ${contas}${camps}
+    ${t.leitura?`<div class="leitura"><b>Leitura:</b> ${esc(t.leitura)}</div>`:""}
+    ${(t.pendencias||[]).length?`<ul class="pend">${t.pendencias.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
+  </div>`;
+}
 function cardHtml(e){
   const p = stageProgress(e, e.etapa), sc = fitScore(e), pct = Math.round(p.done/p.total*100);
   const late = isLate(e);
   return `<button class="card" data-open="${esc(e.id)}" type="button">
     <div class="who-row">${ava(e)}<div><div class="nm">${esc(e.nome)}</div><div class="hd">${esc(e.handle||"")}${e.nicho?" · "+esc(e.nicho):""}</div></div></div>
     <div><div class="bar ${p.done===p.total?"done":""}"><i style="width:${pct}%"></i></div></div>
-    <div class="meta"><span class="pill ${p.done===p.total?"good":""}">${p.done}/${p.total} da etapa</span><span class="pill ${scoreClass(sc)}">Encaixe ${sc}</span>${e.modelo?`<span class="pill acc">${esc(e.modelo)}</span>`:""}</div>
+    <div class="meta"><span class="pill ${p.done===p.total?"good":""}">${p.done}/${p.total} da etapa</span><span class="pill ${scoreClass(sc)}">Encaixe ${sc}</span>${e.modelo?`<span class="pill acc">${esc(e.modelo)}</span>`:""}${e.trafego?`<span class="pill ${e.trafego.status==="sem_acesso"?"bad":"good"}">${esc(e.trafego.chip||(e.trafego.status==="sem_acesso"?"Tráfego sem acesso":"Tráfego"))}</span>`:""}</div>
     ${e.proximaAcao?`<div class="next ${late?"late":""}">${late?"Atrasado · ":""}${e.proximaData?`<span class="mono">${fmtDate(e.proximaData)}</span> · `:""}${esc(e.proximaAcao)}</div>`:""}
   </button>`;
 }
@@ -378,6 +410,7 @@ function renderDrawer(){
     </div>
     <div class="stepper">${STAGES.map((st,i)=>`<button class="step ${i<si?"past":i===si?"cur":""}" type="button" data-goto="${st.k}" ${dis} title="Mover para ${esc(st.n)}"><i></i><span>${esc(st.n)}</span></button>`).join("")}</div>
     ${SK[e.etapa]>=SK.contrato ? (()=>{ const g=plProgress(e), nx=plNext(e), pct=Math.round(g.done/g.total*100); return `<div class="sec"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Montagem do negócio · <span class="mono">${pct}%</span></h3><p class="why" style="margin:0">${nx?`Próximo passo: ${esc(nx.t)} (${esc(nx.fase)})`:"Montagem completa."}</p></div><button class="btn sm primary" type="button" data-plopen="${esc(e.id)}">Abrir a montagem</button></div><div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div></div>`; })() : ""}
+    ${trafegoHtml(e)}
     ${perfilHtml(e)}
 
     <div class="sec">
