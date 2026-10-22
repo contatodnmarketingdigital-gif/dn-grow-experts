@@ -221,6 +221,13 @@ button{cursor:pointer}
 .tr td.nm{min-width:180px}
 .tr .sub{display:block;color:var(--muted);font-size:11px}
 .tr-h{font-size:12px;font-weight:700;margin:14px 0 0;color:var(--fg)}
+.cnums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.cnums div{background:var(--surface-2);border-radius:8px;padding:6px 8px;min-width:0}
+.cnums b{display:block;font-size:13px}
+.cnums span{display:block;font-size:10px;color:var(--muted);line-height:1.25}
+.estr{margin:6px 0 0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.mais{margin-top:14px}
+.mais > summary{cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;padding:8px 2px}
 .pend{margin:10px 0 0;padding-left:18px;font-size:12px}
 .pend li{margin:2px 0}
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
@@ -311,7 +318,7 @@ const brl = v => (Number(v)||0).toLocaleString("pt-BR",{style:"currency",currenc
 const nfmt = v => (Number(v)||0).toLocaleString("pt-BR");
 
 let db = null, canWrite = true;
-let experts = [], pedidos = [], openId = null, pendingMove = null, qFilter = "abertos";
+let experts = [], pedidos = [], openId = null, pendingMove = null, qFilter = "abertos", maisOpen = false;
 const queues = {};
 function enqueue(id, fn){ const p = (queues[id]||Promise.resolve()).then(fn, fn); queues[id] = p.catch(()=>{}); return p; }
 
@@ -325,24 +332,28 @@ function isLate(e){ return e.proximaData && e.proximaData < today(); }
 /* ---------- render: KPIs ---------- */
 function renderKpis(){
   const ativos = experts.filter(e=>e.status!=="arquivado");
-  const piloto = ativos.filter(e=>e.etapa==="piloto"||e.etapa==="socio").length;
-  const late = ativos.filter(isLate).length;
-  const meta = ativos.reduce((a,e)=>a+(Number(e.meta)||0),0);
+  const socios = ativos.filter(e=>e.etapa==="socio").length;
+  const piloto = ativos.filter(e=>e.etapa==="piloto").length;
+  const lidos = ativos.filter(e=>e.trafego?.status==="ok");
+  const semAcesso = ativos.filter(e=>e.trafego?.status==="sem_acesso").length;
+  const inv = lidos.reduce((a,e)=>a+(Number(e.trafego.investido)||0),0);
+  const fat = lidos.reduce((a,e)=>a+(Number(e.trafego.faturamento)||0),0);
   const abertos = pedidos.filter(p=>p.status!=="feito").length;
   $("#kpis").innerHTML = `
-    <div class="kpi"><div class="lbl">No funil</div><div class="val mono">${ativos.length}</div><div class="sub">${experts.length-ativos.length} arquivado(s)</div></div>
-    <div class="kpi"><div class="lbl">Em piloto ou sócios</div><div class="val mono">${piloto}</div><div class="sub">etapas 7 e 8</div></div>
-    <div class="kpi"><div class="lbl">Meta mensal somada</div><div class="val mono">${brl(meta)}</div><div class="sub">dos experts ativos</div></div>
-    <div class="kpi ${late?"alert":""}"><div class="lbl">Próximas ações atrasadas</div><div class="val mono">${late}</div><div class="sub">${late?"abra os cards em vermelho":"tudo em dia"}</div></div>
-    <div class="kpi"><div class="lbl">Pedidos aos agentes</div><div class="val mono">${abertos}</div><div class="sub">abertos na fila</div></div>`;
+    <div class="kpi"><div class="lbl">Experts</div><div class="val mono">${ativos.length}</div><div class="sub">${socios} sócio(s) · ${piloto} em piloto</div></div>
+    <div class="kpi"><div class="lbl">Investido em tráfego no mês</div><div class="val mono">${brl(inv)}</div><div class="sub">${lidos.length} conta(s) lida(s)</div></div>
+    <div class="kpi"><div class="lbl">Faturamento no pixel no mês</div><div class="val mono">${brl(fat)}</div><div class="sub">${inv?`${(fat/inv).toLocaleString("pt-BR",{maximumFractionDigits:2})} por real investido, captação incluída`:"sem leitura"}</div></div>
+    <div class="kpi ${semAcesso?"alert":""}"><div class="lbl">Sem acesso ao tráfego</div><div class="val mono">${semAcesso}</div><div class="sub">${semAcesso?ativos.filter(e=>e.trafego?.status==="sem_acesso").map(e=>esc(e.nome.split(" ")[0])).join(", "):"todos lidos"}</div></div>`;
   $("#qCount").textContent = abertos;
 }
 
 /* ---------- render: board ---------- */
 function renderBoard(){
   const ativos = experts.filter(e=>e.status!=="arquivado");
+  // Só as etapas com alguém aparecem, para os números ficarem na tela.
   $("#board").innerHTML = STAGES.map((s,i)=>{
     const list = ativos.filter(e=>e.etapa===s.k).sort((a,b)=>(a.proximaData||"9")<(b.proximaData||"9")?-1:1);
+    if(!list.length && ativos.length) return "";
     return `<div class="col">
       <div class="col-h"><div class="row"><span class="num">Etapa ${i+1}</span><span class="n">${list.length}</span></div><h3>${s.n}</h3></div>
       ${list.length? list.map(cardHtml).join("") : `<div class="empty">Ninguém nesta etapa</div>`}
@@ -384,14 +395,23 @@ function trafegoHtml(e){
     ${(t.pendencias||[]).length?`<ul class="pend">${t.pendencias.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
   </div>`;
 }
+// Até 4 números do resumo de tráfego no card do funil.
+function cardNums(e){
+  const r = (e.trafego?.resumo||[]).slice(0,4); if(!r.length || e.trafego.status!=="ok") return "";
+  return `<div class="cnums">${r.map(m=>`<div><b class="mono">${esc(m.valor)}</b><span>${esc(m.rotulo)}</span></div>`).join("")}</div>`;
+}
+function estrategiaHtml(e){
+  const it = (e.estrategia||[]).slice(0,3); if(!it.length) return "";
+  return `<div class="sec"><h3>Estratégia</h3><ul class="estr">${it.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+}
 function cardHtml(e){
   const p = stageProgress(e, e.etapa), sc = fitScore(e), pct = Math.round(p.done/p.total*100);
   const late = isLate(e);
   return `<button class="card" data-open="${esc(e.id)}" type="button">
     <div class="who-row">${ava(e)}<div><div class="nm">${esc(e.nome)}</div><div class="hd">${esc(e.handle||"")}${e.nicho?" · "+esc(e.nicho):""}</div></div></div>
-    <div><div class="bar ${p.done===p.total?"done":""}"><i style="width:${pct}%"></i></div></div>
-    <div class="meta"><span class="pill ${p.done===p.total?"good":""}">${p.done}/${p.total} da etapa</span><span class="pill ${scoreClass(sc)}">Encaixe ${sc}</span>${e.modelo?`<span class="pill acc">${esc(e.modelo)}</span>`:""}${e.trafego?`<span class="pill ${e.trafego.status==="sem_acesso"?"bad":"good"}">${esc(e.trafego.chip||(e.trafego.status==="sem_acesso"?"Tráfego sem acesso":"Tráfego"))}</span>`:""}</div>
-    ${e.proximaAcao?`<div class="next ${late?"late":""}">${late?"Atrasado · ":""}${e.proximaData?`<span class="mono">${fmtDate(e.proximaData)}</span> · `:""}${esc(e.proximaAcao)}</div>`:""}
+    <div class="meta">${e.modelo?`<span class="pill acc">${esc(e.modelo)}</span>`:""}${e.trafego?`<span class="pill ${e.trafego.status==="sem_acesso"?"bad":"good"}">${esc(e.trafego.chip||(e.trafego.status==="sem_acesso"?"Tráfego sem acesso":"Tráfego"))}</span>`:""}</div>
+    ${cardNums(e)}
+    ${(e.estrategia||[])[0]?`<div class="next">${esc(e.estrategia[0])}</div>`:""}
   </button>`;
 }
 
@@ -409,9 +429,12 @@ function renderDrawer(){
       <button class="btn sm" id="dClose" type="button" aria-label="Fechar">Fechar</button>
     </div>
     <div class="stepper">${STAGES.map((st,i)=>`<button class="step ${i<si?"past":i===si?"cur":""}" type="button" data-goto="${st.k}" ${dis} title="Mover para ${esc(st.n)}"><i></i><span>${esc(st.n)}</span></button>`).join("")}</div>
-    ${SK[e.etapa]>=SK.contrato ? (()=>{ const g=plProgress(e), nx=plNext(e), pct=Math.round(g.done/g.total*100); return `<div class="sec"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Montagem do negócio · <span class="mono">${pct}%</span></h3><p class="why" style="margin:0">${nx?`Próximo passo: ${esc(nx.t)} (${esc(nx.fase)})`:"Montagem completa."}</p></div><button class="btn sm primary" type="button" data-plopen="${esc(e.id)}">Abrir a montagem</button></div><div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div></div>`; })() : ""}
     ${trafegoHtml(e)}
+    ${estrategiaHtml(e)}
     ${perfilHtml(e)}
+
+    <details class="mais" id="dMais" ${maisOpen?"open":""}><summary>Funil, tarefas e ficha</summary>
+    ${SK[e.etapa]>=SK.contrato && e.etapa!=="socio" ? (()=>{ const g=plProgress(e), nx=plNext(e), pct=Math.round(g.done/g.total*100); return `<div class="sec"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Montagem do negócio · <span class="mono">${pct}%</span></h3><p class="why" style="margin:0">${nx?`Próximo passo: ${esc(nx.t)} (${esc(nx.fase)})`:"Montagem completa."}</p></div><button class="btn sm primary" type="button" data-plopen="${esc(e.id)}">Abrir a montagem</button></div><div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div></div>`; })() : ""}
 
     <div class="sec">
       <h3>Etapa ${si+1} · ${esc(s.n)}</h3>
@@ -467,7 +490,8 @@ function renderDrawer(){
     <div class="sec">
       <h3>Histórico</h3>
       <ul class="hist">${(e.historico||[]).slice().reverse().map(h=>`<li><time class="mono">${esc(fmtDate(h.em?.slice(0,10)))}/${esc(h.em?.slice(2,4))}</time><span>${esc(h.txt)}</span></li>`).join("")||`<li><span></span><span style="color:var(--muted)">Sem registros ainda.</span></li>`}</ul>
-    </div>`;
+    </div>
+    </details>`;
   $("#drawer").scrollTop = scrollY;
   function fld(k,l,t="text"){ return `<div class="fld"><label for="f-${k}">${l}</label><input id="f-${k}" type="${t}" data-f="${k}" value="${esc(e[k])}" ${dis}></div>`; }
 }
@@ -543,6 +567,7 @@ document.addEventListener("change", ev=>{
     if((e[k]??"")===(v??"")) return; save(e.id,{[k]:v}, k==="proximaAcao"&&v?`Próxima ação: ${v}`:null); }
 });
 $("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("toggle", ev=>{ if(ev.target.id==="dMais") maisOpen = ev.target.open; }, true);
 document.addEventListener("keydown", ev=>{ if(ev.key==="Escape" && openId) closeDrawer(); });
 
 async function copy(txt){
