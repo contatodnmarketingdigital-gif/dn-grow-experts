@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Black da Jéssica</title>
+<style>
+:root{color-scheme:light;--ink:#1f1b2d;--mut:#6b6680;--line:#ebe7f3;--soft:#f7f4fc;--acc:#6b3fa0;--acc2:#b48be0;--acc3:#e7dbf6;--pink:#e0558f;--ok:#2f855a;--warn:#c27c0e;--crit:#c0392b;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:#faf8fd;color:var(--ink);font:15px/1.5 Inter,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 16px 40px}
+@page{size:A4;margin:12mm}
+@media print{body{background:#fff;font-size:12.5px}.wrap{padding:0}.card,.hero,.tl{break-inside:avoid}}
+.hero{background:linear-gradient(135deg,#3b1d63,#6b3fa0 60%,#a35ad1);color:#fff;border-radius:18px;padding:26px 26px 22px}
+.hero .tag{display:inline-block;background:rgba(255,255,255,.16);border-radius:99px;padding:3px 12px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.hero h1{font-size:30px;line-height:1.1;margin:12px 0 6px;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.88;max-width:640px}
+.hero .big{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.hero .big div{background:rgba(255,255,255,.12);border-radius:12px;padding:12px 14px}
+.hero .big b{display:block;font-size:24px;letter-spacing:-.01em}
+.hero .big span{font-size:12.5px;opacity:.85}
+h2{font-size:20px;margin:34px 0 4px;letter-spacing:-.01em}
+.lead{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid2>*,.scen>*,.bks>*{min-width:0}
+/* barras por ano */
+.years{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:end;height:230px;padding:0 6px;border-bottom:2px solid var(--line)}
+.yr{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.yr .val{font-weight:700;font-size:17px}
+.yr .sub{font-size:12px;color:var(--mut);margin-bottom:6px;text-align:center}
+.yr .bar{width:64%;border-radius:10px 10px 0 0;background:var(--acc2)}
+.yr.on .bar{background:var(--acc)}
+.yr.now .bar{background:repeating-linear-gradient(45deg,var(--acc2),var(--acc2) 6px,var(--acc3) 6px,var(--acc3) 12px)}
+.ylab{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center;font-weight:700;margin-top:8px}
+.ylab small{display:block;font-weight:500;color:var(--mut);font-size:12px}
+/* de onde vem */
+.stack{display:flex;height:46px;border-radius:12px;overflow:hidden;margin:10px 0 8px;font-weight:700;font-size:13px;color:#fff}
+.stack div{display:flex;align-items:center;justify-content:center;white-space:nowrap;padding:0 8px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+/* cenários */
+.scen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sc{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
+.sc.on{border:2px solid var(--acc);background:var(--soft)}
+.sc h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.sc.on h3{color:var(--acc)}
+.sc .hyp{font-size:12.5px;color:var(--mut);margin:2px 0 12px}
+.row{margin:8px 0}
+.row .lb{display:flex;justify-content:space-between;font-size:13px}
+.row .lb b{font-size:15px}
+.track{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:4px}
+.track span{display:block;height:100%;border-radius:99px;background:var(--acc2)}
+.track.b span{background:var(--acc)}
+.sc .foot{font-size:12.5px;color:var(--mut);margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+/* cronograma */
+.tl{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 16px 14px;overflow-x:auto}
+.tlin{min-width:720px}
+.phases{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin-bottom:10px}
+.ph{border-radius:8px;padding:6px 8px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph small{display:block;font-weight:500;opacity:.9}
+.days{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;align-items:end;height:170px;border-bottom:2px solid var(--line)}
+.day{display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;position:relative}
+.day .v{font-size:11px;font-weight:700;text-align:center;margin-bottom:3px;white-space:nowrap}
+.day .s10{background:var(--acc);border-radius:0 0 3px 3px}
+.day .s15{background:repeating-linear-gradient(45deg,var(--pink),var(--pink) 4px,#f3a9c7 4px,#f3a9c7 8px);border-radius:6px 6px 0 0}
+.day .s10.top{border-radius:6px 6px 3px 3px}
+.dl{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin-top:6px;text-align:center;font-size:11.5px;font-weight:700}
+.dl small{display:block;font-weight:500;color:var(--mut)}
+.dl .hoje{color:var(--acc)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.st{background:var(--soft);border-radius:12px;padding:12px}
+.st b{display:block;font-size:13px;color:var(--acc)}
+.st span{font-size:13px}
+.note{border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px}
+.note.warn{background:#fff6ec;border:1px solid #f6d9b0}
+.note.ok{background:#eef8f1;border:1px solid #c9e8d3}
+.note.pur{background:var(--soft);border:1px solid var(--acc3)}
+.note b{color:var(--ink)}
+ul{margin:6px 0 0;padding-left:20px}li{margin:3px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:var(--soft);font-weight:600}
+.fonte{font-size:12px;color:var(--mut);margin-top:24px}
+.bks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.bk{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;break-inside:avoid}
+.bk.on{border:2px solid var(--acc);background:var(--soft)}
+.bk.now{border:2px dashed var(--acc2)}
+.bk .bt{font-weight:800;font-size:16px;color:var(--acc);margin-bottom:6px}
+.bk .m{padding:8px 0;border-top:1px solid var(--line)}
+.bk .m span{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:600}
+.bk .m b{font-size:22px;letter-spacing:-.01em}
+.bk .m b.g{color:var(--ok)}.bk .m b.mu{color:var(--mut);font-size:18px}
+.bk .m small{display:block;font-size:12px;color:var(--mut)}
+@media (max-width:640px){.bks{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .hero h1{font-size:24px}.hero .big,.grid2,.scen,.steps{grid-template-columns:1fr}
+  .years{height:190px}.card{padding:16px}
+  .tbl{overflow-x:auto}.tbl table{min-width:520px}
+}
+</style></head><body><div class="wrap">
+
+<header class="hero">
+  <span class="tag">Black Sem Disciplina · Jéssica Cristianni</span>
+  <h1>Quanto a Black custou, quanto voltou e quanto pode voltar</h1>
+  <p>Anúncios das contas 02 e 05 de 2024 a 2026, com a projeção de investir R$ 10 mil ou R$ 15 mil na Black de 2026.</p>
+  <div class="big">
+    <div><b>R$ 1,6 mil</b><span>em anúncio na Black 2025, que faturou mais de R$ 100 mil</span></div>
+    <div><b>+R$ 45 mil</b><span>de faturamento novo com R$ 10 mil (cenário provável)</span></div>
+    <div><b>+R$ 60 mil</b><span>de faturamento novo com R$ 15 mil (cenário provável)</span></div>
+  </div>
+</header>
+
+<h2>Cada Black: investimento, valor do lead e retorno</h2>
+<p class="lead">O anúncio da Black nunca passou de R$ 1,6 mil. O lead dela é sempre o mais barato do ano.</p>
+<div class="bks">
+  <div class="bk"><div class="bt">Black 2024</div>
+    <div class="m"><span>Investimento</span><b>R$ 645,50</b></div>
+    <div class="m"><span>Valor do lead</span><b>R$ 1,60</b><small>403 cadastros</small></div>
+    <div class="m"><span>Retorno</span><b class="mu">sem dado</b><small>falta a Greenn de nov/24</small></div>
+  </div>
+  <div class="bk on"><div class="bt">Black 2025</div>
+    <div class="m"><span>Investimento</span><b>R$ 1.583,63</b></div>
+    <div class="m"><span>Valor do lead</span><b>R$ 2,46</b><small>643 cadastros</small></div>
+    <div class="m"><span>Retorno</span><b class="g">+R$ 100 mil</b><small>R$ 63 por real, com a base (dito por ela)</small></div>
+  </div>
+  <div class="bk now"><div class="bt">Black 2026 · até 27/10</div>
+    <div class="m"><span>Investimento</span><b>R$ 471,60</b><small>plano: R$ 10 mil</small></div>
+    <div class="m"><span>Valor do lead</span><b>R$ 2,35</b><small>201 leads</small></div>
+    <div class="m"><span>Retorno projetado</span><b class="g">≈ R$ 145 mil</b><small>R$ 100 mil da base + R$ 45 mil do tráfego</small></div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <div class="years">
+      <div class="yr"><div class="val">R$ 646</div><div class="sub">403 cadastros<br>R$ 1,60 cada</div><div class="bar" style="height:41%"></div></div>
+      <div class="yr on"><div class="val">R$ 1.584</div><div class="sub">643 cadastros<br>R$ 2,46 cada</div><div class="bar" style="height:100%;max-height:150px"></div></div>
+      <div class="yr now"><div class="val">R$ 472</div><div class="sub">201 leads<br>R$ 2,35 cada</div><div class="bar" style="height:30%"></div></div>
+    </div>
+    <div class="ylab"><div>2024<small>sem faturamento</small></div><div>2025<small>+R$ 100 mil</small></div><div>2026<small>até 27/10</small></div></div>
+  </div>
+  <div class="card">
+    <b>De onde veio o faturamento da Black 2025</b>
+    <div class="stack"><div style="flex:84;background:var(--acc)">Base de alunas + orgânico</div><div style="flex:16;background:var(--pink)">Tráfego</div></div>
+    <div class="legend"><span><i style="background:var(--acc)"></i>631 alunas e 918 mil seguidores</span><span><i style="background:var(--pink)"></i>643 cadastros do anúncio</span></div>
+    <p style="font-size:13.5px;margin:12px 0 0">Mais de R$ 100 mil no ticket médio de R$ 357 são uns 280 vendas. Os 643 cadastros só explicam isso se 44% comprassem. Então a maior parte veio da base. A divisão no gráfico é ilustrativa, com 5% dos cadastros comprando.</p>
+    <div class="note warn" style="margin-bottom:0"><b>Por isso não dá para multiplicar.</b> Na conta direta (R$ 63 por real), R$ 10 mil virariam R$ 630 mil. O anúncio não aumenta a base: ele compra lead novo, quase todo frio.</div>
+  </div>
+</div>
+
+<h2>Projeção: o que o tráfego acrescenta</h2>
+<p class="lead">Verba ÷ custo por lead × % que compra × R$ 357 de ticket médio (60% anual, 40% semestral). Com mais verba, o lead encarece.</p>
+<div class="scen">
+  <div class="sc">
+    <h3>Pessimista</h3><div class="hyp">lead de R$ 5 a R$ 5,50 · 3% compram</div>
+    <div class="row"><div class="lb">R$ 10 mil → <b>R$ 21,4 mil</b></div><div class="track"><span style="width:23%"></span></div></div>
+    <div class="row"><div class="lb">R$ 15 mil → <b>R$ 29,3 mil</b></div><div class="track b"><span style="width:32%"></span></div></div>
+    <div class="foot">ROAS 2,0 a 2,1 · sobra de R$ 5,8 a 6,6 mil</div>
+  </div>
+  <div class="sc on">
+    <h3>Provável</h3><div class="hyp">lead de R$ 4 a R$ 4,50 · 5% compram</div>
+    <div class="row"><div class="lb">R$ 10 mil → <b>R$ 44,6 mil</b></div><div class="track"><span style="width:49%"></span></div></div>
+    <div class="row"><div class="lb">R$ 15 mil → <b>R$ 59,6 mil</b></div><div class="track b"><span style="width:65%"></span></div></div>
+    <div class="foot">ROAS 4,0 a 4,5 · 125 a 167 vendas · sobra de R$ 22,9 a 29 mil</div>
+  </div>
+  <div class="sc">
+    <h3>Otimista</h3><div class="hyp">lead de R$ 3 a R$ 3,50 · 6% compram</div>
+    <div class="row"><div class="lb">R$ 10 mil → <b>R$ 71,4 mil</b></div><div class="track"><span style="width:78%"></span></div></div>
+    <div class="row"><div class="lb">R$ 15 mil → <b>R$ 91,7 mil</b></div><div class="track b"><span style="width:100%"></span></div></div>
+    <div class="foot">ROAS 6,1 a 7,1 · sobra de R$ 42,7 a 52,7 mil</div>
+  </div>
+</div>
+<div class="grid2" style="margin-top:14px">
+  <div class="note pur" style="margin:0"><b>Black inteira, cenário provável:</b> cerca de <b>R$ 145 mil</b> com R$ 10 mil e <b>R$ 160 mil</b> com R$ 15 mil. São os R$ 100 mil da base (se repetir 2025) mais o tráfego.</div>
+  <div class="note ok" style="margin:0"><b>Empata com 1,5% dos leads comprando.</b> Mesmo no pessimista, o investimento volta com sobra. "Sobra" = faturamento novo − 15% de taxa e imposto − R$ 40 de brinde por compradora − anúncio, antes do 60/40.</div>
+</div>
+
+<h2>Cronograma de investimento até o carrinho</h2>
+<p class="lead">O gargalo é o prazo: a captação fecha em 01/11, e hoje a campanha gasta R$ 77 por dia. A verba sobe em degraus, e cada degrau só vale se o lead seguir abaixo de R$ 4,50.</p>
+<div class="tl"><div class="tlin">
+  <div class="phases">
+    <div class="ph" style="grid-column:1/7;background:var(--acc)">Captação para o grupo<small>até dom 01/11 · público frio + quente</small></div>
+    <div class="ph" style="grid-column:7/10;background:#8a5cc4">4 lives<small>02 a 05/11</small></div>
+    <div class="ph" style="grid-column:10/14;background:var(--pink)">Carrinho<small>05 a 08/11 · fecha antes da Black da Joia (09/11)</small></div>
+  </div>
+  <div class="days">
+    <div class="day"><div class="v">R$ 500</div><div class="s10 top" style="height:26%"></div></div>
+    <div class="day"><div class="v">R$ 1.000</div><div class="s10 top" style="height:53%"></div></div>
+    <div class="day"><div class="v">R$ 1.400</div><div class="s10 top" style="height:74%"></div></div>
+    <div class="day"><div class="v">R$ 1.400</div><div class="s10 top" style="height:74%"></div></div>
+    <div class="day"><div class="v">R$ 1.400</div><div class="s10 top" style="height:74%"></div></div>
+    <div class="day"><div class="v">R$ 1.400</div><div class="s10 top" style="height:74%"></div></div>
+    <div class="day"><div class="v">+1.500</div><div class="s15" style="height:79%"></div><div class="s10" style="height:0"></div></div>
+    <div class="day"><div class="v">+1.500</div><div class="s15" style="height:79%"></div></div>
+    <div class="day"><div class="v">+1.500</div><div class="s15" style="height:79%"></div></div>
+    <div class="day"><div class="v">R$ 700</div><div class="s15" style="height:5%"></div><div class="s10" style="height:37%"></div></div>
+    <div class="day"><div class="v">R$ 700</div><div class="s15" style="height:5%"></div><div class="s10" style="height:37%"></div></div>
+    <div class="day"><div class="v">R$ 700</div><div class="s15" style="height:5%"></div><div class="s10" style="height:37%"></div></div>
+    <div class="day"><div class="v">R$ 800</div><div class="s15" style="height:5%"></div><div class="s10" style="height:42%"></div></div>
+  </div>
+  <div class="dl">
+    <div class="hoje">ter 27<small>hoje</small></div><div>qua 28</div><div>qui 29</div><div>sex 30</div><div>sáb 31</div><div>dom 01</div>
+    <div>seg 02</div><div>ter 03</div><div>qua 04</div><div>qui 05</div><div>sex 06</div><div>sáb 07</div><div>dom 08</div>
+  </div>
+  <div class="legend" style="margin-top:12px"><span><i style="background:var(--acc)"></i>Plano de R$ 10 mil: R$ 7,1 mil na captação + R$ 2,9 mil no carrinho</span><span><i style="background:var(--pink)"></i>Extra para R$ 15 mil: captação durante as lives (R$ 4,5 mil) + R$ 500 no carrinho</span></div>
+</div></div>
+
+<div class="steps">
+  <div class="st"><b>Hoje · 27/10</b><span>Abrir público frio (semelhante das alunas e compradoras, interesse em treino em casa) com R$ 500 por dia.</span></div>
+  <div class="st"><b>28/10 a 01/11</b><span>Subir para R$ 1.000 e depois R$ 1.400 por dia, a cada 24 horas com lead abaixo de R$ 4,50.</span></div>
+  <div class="st"><b>02 a 04/11 · só nos R$ 15 mil</b><span>Seguir captando durante as lives. Quem entra assiste às lives seguintes.</span></div>
+  <div class="st"><b>05 a 08/11</b><span>Remarketing de quem está no grupo, viu as lives ou visitou a página de vendas.</span></div>
+</div>
+<div class="note warn"><b>Regra de corte:</b> se o lead passar de R$ 6 por 24 horas, volta para R$ 500 por dia e troca o criativo. <b>Minha opinião:</b> R$ 10 mil é a aposta certa. Os R$ 5 mil a mais rendem uns R$ 6 mil de sobra no provável e só R$ 800 no pessimista. Eu só iria a R$ 15 mil se o lead segurar abaixo de R$ 4,50 até 31/10.</div>
+
+<h2>Detalhes</h2>
+<div class="grid2">
+  <div class="card tbl">
+    <b>Lançamentos em grupo VIP</b>
+    <table>
+      <thead><tr><th>Lançamento</th><th class="n">Investido</th><th class="n">Lead</th></tr></thead>
+      <tbody>
+        <tr class="hl"><td>Black 2024</td><td class="n">R$ 646</td><td class="n">R$ 1,60</td></tr>
+        <tr><td>Semana SSD · fev/25</td><td class="n">R$ 1.843</td><td class="n">R$ 4,00</td></tr>
+        <tr><td>Aniversário SSD · mai/25</td><td class="n">R$ 2.660</td><td class="n">R$ 4,03</td></tr>
+        <tr><td>Desafio 30D · jul/25</td><td class="n">R$ 1.214</td><td class="n">—</td></tr>
+        <tr><td>Chega de Desculpas · set/25</td><td class="n">R$ 1.975</td><td class="n">R$ 5,56</td></tr>
+        <tr class="hl"><td>Black 2025</td><td class="n">R$ 1.584</td><td class="n">R$ 2,46</td></tr>
+        <tr><td>Chega de Desculpas · jan/26</td><td class="n">R$ 1.872</td><td class="n">R$ 3,44</td></tr>
+        <tr><td>Grupo VIP · mai/26</td><td class="n">R$ 1.415</td><td class="n">R$ 2,46</td></tr>
+        <tr class="hl"><td>Black 2026 (até 27/10)</td><td class="n">R$ 472</td><td class="n">R$ 2,35</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card tbl">
+    <b>Tráfego total de 18/09/2024 a 27/10/2026</b>
+    <table>
+      <thead><tr><th>Conta</th><th class="n">Investido</th><th class="n">Campanhas</th></tr></thead>
+      <tbody>
+        <tr><td>02 · Secar sem disciplina</td><td class="n">R$ 21.467</td><td class="n">45</td></tr>
+        <tr><td>05 · Secar sem Disciplina</td><td class="n">R$ 7.073</td><td class="n">32</td></tr>
+        <tr class="hl"><td>Total</td><td class="n">R$ 28.540</td><td class="n">77</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px;color:var(--mut);margin:10px 0 0">R$ 12.741 desse total foram impulsionamentos e campanhas de engajamento e visita ao perfil. Não há dado de 2023: o histórico das contas começa em 18/09/2024.</p>
+  </div>
+</div>
+
+<p class="fonte">Fontes: relatórios de campanhas das contas 02 e 05 exportados do Gerenciador em 27/10/2026; faturamento de 2025 dito pela Jéssica na call de onboarding de 15/10/2026. O faturamento real de cada Black está na Greenn (vendas de novembro de 2024 e 2025). A projeção é estimativa: a taxa de compra parte dos 5% do plano da Black para lançamento em grupo.</p>
+</div></body></html>
