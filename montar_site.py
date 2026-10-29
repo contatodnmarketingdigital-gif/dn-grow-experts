@@ -6,7 +6,13 @@ Uso:
   2. py -3 montar_site.py <pasta-do-export>
 Gera index.html (a mesma página do painel, embrulhada como documento) e dados.json.
 """
-import json, sys, pathlib, datetime
+import json, sys, pathlib, datetime, re
+
+# Trechos só do painel do Claude (links privados) ficam entre <!--PRIVADO--> e <!--FIM-PRIVADO-->,
+# inclusive dentro do srcdoc, onde aparecem escapados. O site público não leva esses trechos.
+PRIVADO = re.compile(r"(<|&lt;)!--PRIVADO--(>|&gt;).*?(<|&lt;)!--FIM-PRIVADO--(>|&gt;)", re.S)
+def publico(txt):
+    return PRIVADO.sub("", txt)
 
 AQUI = pathlib.Path(__file__).parent
 export = pathlib.Path(sys.argv[1])
@@ -41,13 +47,13 @@ def documento(corpo):
 # As duas páginas se ligam só no site: no Claude cada uma é um artifact separado.
 LINK = '<a href="{href}" style="font:600 13px system-ui,sans-serif;color:#3550c4;text-decoration:none;border:1px solid #d6dbe8;border-radius:8px;padding:6px 12px;background:#fff">{txt}</a>'
 
-corpo = (AQUI / "fonte" / "painel.html").read_text(encoding="utf-8")
+corpo = publico((AQUI / "fonte" / "painel.html").read_text(encoding="utf-8"))
 (AQUI / "index.html").write_text(documento(corpo), encoding="utf-8")
 
 # Página de Projetos (números por produto): vem pronta, com os dados dentro, da pasta dn-grow-projetos.
 proj = AQUI.parent / "dn-grow-projetos" / "index.html"
 if proj.exists():
-    p = proj.read_text(encoding="utf-8")
+    p = publico(proj.read_text(encoding="utf-8"))
     p = p.replace('<span class="stamp" id="stamp"></span>', '<span class="stamp" id="stamp"></span>' + LINK.format(href="./", txt="← Funil de experts"), 1)
     (AQUI / "projetos.html").write_text(documento(p), encoding="utf-8")
 print(f"{len(experts)} expert(s), {len(pedidos)} pedido(s) · {agora} · projetos.html {'ok' if proj.exists() else 'ausente'}")
