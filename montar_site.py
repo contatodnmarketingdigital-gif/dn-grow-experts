@@ -55,5 +55,11 @@ proj = AQUI.parent / "dn-grow-projetos" / "index.html"
 if proj.exists():
     p = publico(proj.read_text(encoding="utf-8"))
     p = p.replace('<span class="stamp" id="stamp"></span>', '<span class="stamp" id="stamp"></span>' + LINK.format(href="./", txt="← Funil de experts"), 1)
+    # Painel por produto da Metrik (Gerenciador × Cakto, ROI 2 e ROI 3), pedido em 03/11/2026: página própria, com link aqui.
+    metrik = sorted((AQUI.parent.parent / "Metrik" / "trafego" / "relatorios" / "cruzamento").glob("*-painel-produtos.html"))
+    if metrik:
+        (AQUI / "metrik-produtos.html").write_text(publico(metrik[-1].read_text(encoding="utf-8")), encoding="utf-8")
+        p = p.replace(LINK.format(href="./", txt="← Funil de experts"),
+                      LINK.format(href="./", txt="← Funil de experts") + " " + LINK.format(href="metrik-produtos.html", txt="Metrik · ROI por produto"), 1)
     (AQUI / "projetos.html").write_text(documento(p), encoding="utf-8")
 print(f"{len(experts)} expert(s), {len(pedidos)} pedido(s) · {agora} · projetos.html {'ok' if proj.exists() else 'ausente'}")
